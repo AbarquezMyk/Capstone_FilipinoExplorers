@@ -1,6 +1,9 @@
 import React from 'react';
 import Background from '../assets/images/Paaralan Quest/Paaralan Quest BG.png';
 import Logo from '../assets/images/Logo.png';
+import StickImage from '../assets/images/Buttons and Other/Timer Log.png';
+import LeftArrow from '../assets/images/Buttons and Other/button prev.png';
+import RightArrow from '../assets/images/Buttons and Other/button next.png';
 
 const PaaralanQuest = () => {
   return (
@@ -15,7 +18,8 @@ const PaaralanQuest = () => {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        paddingTop: '20px',
+        justifyContent: 'flex-start',
+        paddingTop: '100px',
         position: 'relative',
       }}
     >
@@ -31,45 +35,44 @@ const PaaralanQuest = () => {
         }}
       />
 
-      {/* Title */}
-      <h1 style={{ color: 'white', textAlign: 'center', marginBottom: '20px' }}>
-        Paaralan Quest Game Screen
-      </h1>
-
-      {/* ✅ Combined Layout: Action Box + Right Sidebar */}
+      {/* ✅ Combined Layout: Stick + Action Box + Sidebar */}
       <div
         style={{
           display: 'flex',
-          flexDirection: 'row',
+          alignItems: 'center',
           justifyContent: 'center',
-          alignItems: 'flex-start',
-          gap: '40px',
-          width: '100%',
+          gap: '20px',
+          width: '90%',
+          margin: '0 auto',
         }}
       >
-        {/* ⏳ Timer Bar (Left Side) */}
-        <div style={{ display: 'flex', alignItems: 'center' }}>
+        {/* 🪵 Timer Stick Image with Oval Bar */}
+        <div style={{ position: 'relative', paddingLeft: '0px', marginRight: '-25px' }}>
+          <img
+            src={StickImage}
+            alt="Timer Stick"
+            style={{
+              width: 'auto',
+              height: '150px',
+              transform: 'rotate(90deg)',
+              objectFit: 'contain',
+              display: 'block'
+            }}
+          />
+          {/* Oval Bar */}
           <div
             style={{
-              width: '20px',
-              height: '600px',
-              backgroundColor: '#fff',
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '50px',
+              height: '320px',
+              backgroundColor: 'lightgreen',
               borderRadius: '50px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'flex-end',
-              overflow: 'hidden',
-              border: '2px solid #ccc',
+              opacity: 1,
             }}
-          >
-            <div
-              style={{
-                height: '80%',
-                backgroundColor: '#fff',
-                borderRadius: '50px',
-              }}
-            ></div>
-          </div>
+          ></div>
         </div>
 
         {/* 🎯 Action Box */}
@@ -81,13 +84,12 @@ const PaaralanQuest = () => {
             backgroundColor: '#f5e5c0',
             borderRadius: '12px',
             padding: '20px',
-            width: '42%',
             height: '600px',
             boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-            position: 'relative',
+            minWidth: '600px',
           }}
         >
-          {/* Right Side (Now Left): Title + Story */}
+          {/* Title + Story */}
           <div style={{ flex: 1, paddingRight: '20px', display: 'flex', flexDirection: 'column' }}>
             <h2 style={{ fontSize: '24px', marginBottom: '10px', color: '#5D4037' }}>
               Title of the Story
@@ -108,7 +110,6 @@ const PaaralanQuest = () => {
             </div>
           </div>
 
-          {/* Divider */}
           <div
             style={{
               width: '8px',
@@ -117,7 +118,7 @@ const PaaralanQuest = () => {
             }}
           />
 
-          {/* Left Side (Now Right): Question + Choices */}
+          {/* Question + Choices */}
           <div style={{ flex: 1, paddingLeft: '20px', display: 'flex', flexDirection: 'column' }}>
             <div style={{ flex: 1, marginBottom: '20px' }}>
               <h2 style={{ fontSize: '22px', color: '#333' }}>Question goes here</h2>
@@ -143,7 +144,7 @@ const PaaralanQuest = () => {
           </div>
         </div>
 
-        {/* ✅ Right Sidebar */}
+        {/* 🧮 Right Sidebar */}
         <div
           style={{
             display: 'flex',
@@ -253,20 +254,11 @@ const PaaralanQuest = () => {
           marginTop: '40px',
         }}
       >
-        <button
-          style={{
-            width: '50px',
-            height: '50px',
-            borderRadius: '10px',
-            backgroundColor: '#90EE90',
-            border: '1px solid #006400',
-            color: 'white',
-            fontSize: '24px',
-            fontWeight: 'bold',
-          }}
-        >
-          &#8592;
-        </button>
+        <img
+          src={LeftArrow}
+          alt="Previous"
+          style={{ width: '60px', height: '60px', cursor: 'pointer' }}
+        />
 
         <button
           style={{
@@ -283,20 +275,11 @@ const PaaralanQuest = () => {
           CHECK ANSWER
         </button>
 
-        <button
-          style={{
-            width: '50px',
-            height: '50px',
-            borderRadius: '10px',
-            backgroundColor: '#90EE90',
-            border: '1px solid #006400',
-            color: 'white',
-            fontSize: '24px',
-            fontWeight: 'bold',
-          }}
-        >
-          &#8594;
-        </button>
+        <img
+          src={RightArrow}
+          alt="Next"
+          style={{ width: '60px', height: '60px', cursor: 'pointer' }}
+        />
       </div>
     </div>
   );
