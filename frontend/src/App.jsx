@@ -6,7 +6,7 @@ import RegisterTeacher from './assets/RegisterTeacher';
 import GuessTheWord from './assets/Guesstheword';
 import MemoryGame from './assets/MemoryGame';
 import ParkeQuest from './assets/ParkeQuest';
-import PaaralanQuest from './pages/PaaralanQuest';
+import PaaralanQuest from './assets/PaaralanQuest';
 const App = () => {
   return (
     <Router>
