@@ -93,17 +93,18 @@ const ParkeQuest = () => {
             </div>
           </div>
 
-          {/* Number Grid Panel – background tightly wraps numbers */}
-<div className="bg-[#703c1c] rounded-[30px] px-6 py-6 shadow-lg">
-  <div className="grid grid-cols-4 gap-x-6 gap-y-4 justify-items-center">
+       {/* Number Grid Background Wrapper */}
+<div className="relative w-[280px] h-[230px] bg-[#8B4A32] rounded-[24px] shadow-lg flex items-center justify-center">
+  {/* Number Grid Inside */}
+  <div className="grid grid-cols-4 gap-x-5 gap-y-5">
     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
       <button
         key={num}
         onClick={() => handleNumberClick(num)}
-        className={`w-12 h-12 rounded-full font-bold text-base transition-all duration-200 ${
+        className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-base transition-all duration-200 ${
           selectedNumbers.includes(num)
             ? "bg-orange-500 text-white"
-            : "bg-[#fde68a] text-amber-900 hover:bg-yellow-300"
+            : "bg-[#F9D9A6] text-black hover:bg-yellow-300"
         }`}
       >
         {num}
@@ -111,11 +112,6 @@ const ParkeQuest = () => {
     ))}
   </div>
 </div>
-
-
-
-
-
 
 
           {/* Hint & Submit */}
