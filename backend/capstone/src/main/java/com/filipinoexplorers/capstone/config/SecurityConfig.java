@@ -25,8 +25,16 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf().disable()
             .authorizeHttpRequests()
-            .requestMatchers("/api/teachers/login", "/api/students/login", "/api/teachers/create", "/api/students/create").permitAll() // Public endpoints
-            .anyRequest().authenticated() // All other endpoints require authentication
+            .requestMatchers("/api/teachers/login", 
+            "/api/students/login", 
+            "/api/teachers/create", 
+            "/api/students/create",
+            "/api/word-puzzles",
+            "/api/word-puzzles/{id}",
+            "/api/check-answer",
+            "/api/hint/{puzzleId}"
+            ).permitAll() // Open endpoints
+            .anyRequest().authenticated() // Secure all other endpoints
             .and()
             .exceptionHandling()
             .authenticationEntryPoint((request, response, authException) -> {
@@ -34,7 +42,8 @@ public class SecurityConfig {
                 response.getWriter().write("Unauthorized: " + authException.getMessage());
             })
             .and()
-            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+            .cors();  // Enable CORS globally in Spring Security
 
         return http.build();
     }
