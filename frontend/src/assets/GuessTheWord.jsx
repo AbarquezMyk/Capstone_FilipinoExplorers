@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import bgImage from '../assets/images/Guess the Word/GuessTheWordBG.png';
+import bgImage from '../assets/images/Guess the Word/Guess the word UI BG.png';
 import filipinoExplorerLogo from '../assets/images/logo.png';
-import woodenLog from '../assets/images/Buttons and Other/TimerLog.png';
-import letterTile from '../assets/images/Guess the Word/LetterTiles.png';
-import leftArrow from '../assets/images/Buttons and Other/buttonPrev.png';
-import rightArrow from '../assets/images/Buttons and Other/buttonNext.png';
+import woodenLog from '../assets/images/Buttons and Other/Timer Log.png';
+import letterTile from '../assets/images/Guess the Word/Letter Tiles.png';
+import leftArrow from '../assets/images/Buttons and Other/button prev.png';
+import rightArrow from '../assets/images/Buttons and Other/button next.png';
 
 const GuessTheWord = () => {
   const [currentPuzzle, setCurrentPuzzle] = useState(null);
