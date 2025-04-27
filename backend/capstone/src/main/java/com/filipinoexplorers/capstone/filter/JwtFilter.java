@@ -30,7 +30,10 @@ public class JwtFilter extends OncePerRequestFilter {
 
         // Skip JWT validation for public endpoints
         if (path.equals("/api/teachers/create") || path.equals("/api/teachers/login") ||
-            path.equals("/api/students/create") || path.equals("/api/students/login")) {
+            path.equals("/api/students/create") || path.equals("/api/students/login") ||
+            path.equals("/api/word-puzzles") || path.equals("/api/word-puzzles/{id}") ||
+            path.equals("/api/check-answer") || path.equals("/api/hint/{puzzleId}") 
+            ) {
             filterChain.doFilter(request, response);
             return;
         }
