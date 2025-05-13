@@ -1,11 +1,123 @@
-import React from 'react';
+console.log("✅ PaaralanQuest component is rendering.");
+
+import React, { useState } from 'react';
 import Background from '../assets/images/Paaralan Quest/Paaralan Quest BG.png';
 import Logo from '../assets/images/Logo.png';
 import StickImage from '../assets/images/Buttons and Other/Timer Log.png';
 import LeftArrow from '../assets/images/Buttons and Other/button prev.png';
 import RightArrow from '../assets/images/Buttons and Other/button next.png';
 
+// ✅ Sample Story Data (Add 13 more later)
+const storyData = [
+  {
+    story: "Si Juan ay isang masipag na estudyante na laging tumutulong sa kanyang mga kaklase.",
+    question: "Ano ang ipinapakita ni Juan sa kanyang mga kaklase?",
+    choices: ["Katamaran", "Kasipagan", "Kawalang-galang", "Pag-aalinlangan"],
+    correctAnswer: 1,
+  },
+  {
+    story: "Isang araw, nagtanim ng buto ng mangga si Ana at araw-araw niya itong dinilig.",
+    question: "Ano ang aral sa kwento ni Ana?",
+    choices: ["Ang prutas ay masarap", "Ang tubig ay mahalaga", "Ang tiyaga ay may magandang bunga", "Ang araw ay mainit"],
+    correctAnswer: 2,
+  },
+  {
+    story: "Tuwing hapon, tinutulungan ni Marco ang kanyang lola sa pagtitinda ng gulay sa palengke.",
+    question: "Ano ang ipinapakita ni Marco sa kanyang lola?",
+    choices: ["Pagiging makasarili", "Pagmamalaki", "Paggalang at pagtulong", "Pag-aaksaya ng oras"],
+    correctAnswer: 2,
+  },
+  {
+    story: "Masayang naglaro si Liza at ang kanyang mga kaibigan sa parke pagkatapos ng klase.",
+    question: "Ano ang ginagawa ni Liza pagkatapos ng klase?",
+    choices: ["Nag-aaral", "Nagpapahinga", "Naglalaba", "Naglaro sa parke"],
+    correctAnswer: 3,
+  },
+  {
+    story: "Si Mang Tonyo ay palaging naglilinis ng kanyang bakuran tuwing umaga.",
+    question: "Ano ang ugali ni Mang Tonyo batay sa kwento?",
+    choices: ["Tamad", "Malinis at masinop", "Makalat", "Pasaway"],
+    correctAnswer: 1,
+  },
+  {
+    story: "Nagbigay ng pagkain si Carla sa batang lansangan nang makita niya ito sa daan.",
+    question: "Anong katangian ni Carla ang ipinakita sa kwento?",
+    choices: ["Pagkainggitin", "Madamot", "Mapagbigay", "Palaaway"],
+    correctAnswer: 2,
+  },
+  {
+    story: "Laging pinupuri ng kanyang guro si Ben dahil sa maayos niyang pagsusulat.",
+    question: "Bakit pinupuri si Ben ng kanyang guro?",
+    choices: ["Magaling siyang sumayaw", "Maayos siyang magsulat", "Mahusay siyang umawit", "Magaling siyang magbasa"],
+    correctAnswer: 1,
+  },
+  {
+    story: "Naglakad si Noel ng isang kilometro upang makarating sa paaralan kahit umuulan.",
+    question: "Anong katangian ang ipinakita ni Noel?",
+    choices: ["Katamaran", "Katapatan", "Kasipagan at tiyaga", "Kabastusan"],
+    correctAnswer: 2,
+  },
+  {
+    story: "Tuwing Sabado, nagsisimba ang pamilya Reyes bilang pasasalamat.",
+    question: "Ano ang ginagawa ng pamilya Reyes tuwing Sabado?",
+    choices: ["Namamasyal", "Nagsisimba", "Naglalaro", "Namimili"],
+    correctAnswer: 1,
+  },
+  {
+    story: "Pinagbigyan ni Aling Rosa ang hiling ng kanyang anak na bumili ng libro.",
+    question: "Ano ang hiningi ng anak ni Aling Rosa?",
+    choices: ["Laruan", "Damit", "Sapatos", "Libro"],
+    correctAnswer: 3,
+  },
+  {
+    story: "Si Dan ay hindi nanood ng TV at sa halip ay nag-aral para sa pagsusulit.",
+    question: "Ano ang ginawa ni Dan sa halip na manood ng TV?",
+    choices: ["Nagluto", "Natulog", "Nag-aral", "Naglaro"],
+    correctAnswer: 2,
+  },
+  {
+    story: "Tinulungan ni May si Lisa sa paggawa ng takdang-aralin sa Filipino.",
+    question: "Anong asignatura ang tinulungan ni May kay Lisa?",
+    choices: ["Matematika", "Agham", "Filipino", "Araling Panlipunan"],
+    correctAnswer: 2,
+  },
+  {
+    story: "Naglinis ng silid-aralan ang mga mag-aaral bago umuwi.",
+    question: "Ano ang ginawa ng mga mag-aaral bago umuwi?",
+    choices: ["Naglaro", "Naglinis ng silid-aralan", "Nag-quiz", "Nag-sine"],
+    correctAnswer: 1,
+  },
+  {
+    story: "Tumulong si Karen sa mga batang walang dalang lapis sa klase.",
+    question: "Ano ang tulong na ginawa ni Karen?",
+    choices: ["Nagbahagi ng lapis", "Nagpahiram ng libro", "Naglinis ng klasrum", "Nagbigay ng pera"],
+    correctAnswer: 0,
+  },
+  {
+    story: "Pinatawad ni Andrea ang kanyang kaibigan matapos silang mag-away.",
+    question: "Ano ang ginawa ni Andrea sa kanyang kaibigan?",
+    choices: ["Pinagalitan", "Pinalayas", "Pinatawad", "Pinagsabihan"],
+    correctAnswer: 2,
+  }
+];
+
+
 const PaaralanQuest = () => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const current = storyData[currentIndex];
+
+  const handleNext = () => {
+    if (currentIndex < storyData.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1);
+    }
+  };
+
   return (
     <div
       style={{
@@ -92,7 +204,7 @@ const PaaralanQuest = () => {
           {/* Title + Story */}
           <div style={{ flex: 1, paddingRight: '20px', display: 'flex', flexDirection: 'column' }}>
             <h2 style={{ fontSize: '24px', marginBottom: '10px', color: '#5D4037' }}>
-              Title of the Story
+              Kuwento #{currentIndex + 1}
             </h2>
             <div
               style={{
@@ -106,7 +218,7 @@ const PaaralanQuest = () => {
                 color: '#333',
               }}
             >
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+              {current.story}
             </div>
           </div>
 
@@ -121,10 +233,10 @@ const PaaralanQuest = () => {
           {/* Question + Choices */}
           <div style={{ flex: 1, paddingLeft: '20px', display: 'flex', flexDirection: 'column' }}>
             <div style={{ flex: 1, marginBottom: '20px' }}>
-              <h2 style={{ fontSize: '22px', color: '#333' }}>Question goes here</h2>
+              <h2 style={{ fontSize: '22px', color: '#333' }}>{current.question}</h2>
             </div>
             <div style={{ flex: 2, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {['Choice A', 'Choice B', 'Choice C', 'Choice D'].map((choice, index) => (
+              {current.choices.map((choice, index) => (
                 <button
                   key={index}
                   style={{
@@ -257,7 +369,13 @@ const PaaralanQuest = () => {
         <img
           src={LeftArrow}
           alt="Previous"
-          style={{ width: '60px', height: '60px', cursor: 'pointer' }}
+          onClick={handlePrev}
+          style={{
+            width: '60px',
+            height: '60px',
+            cursor: currentIndex > 0 ? 'pointer' : 'not-allowed',
+            opacity: currentIndex > 0 ? 1 : 0.5,
+          }}
         />
 
         <button
@@ -278,7 +396,13 @@ const PaaralanQuest = () => {
         <img
           src={RightArrow}
           alt="Next"
-          style={{ width: '60px', height: '60px', cursor: 'pointer' }}
+          onClick={handleNext}
+          style={{
+            width: '60px',
+            height: '60px',
+            cursor: currentIndex < storyData.length - 1 ? 'pointer' : 'not-allowed',
+            opacity: currentIndex < storyData.length - 1 ? 1 : 0.5,
+          }}
         />
       </div>
     </div>
