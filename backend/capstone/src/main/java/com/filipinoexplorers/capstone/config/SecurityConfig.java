@@ -20,22 +20,29 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf().disable()
-            .authorizeHttpRequests()
-            .requestMatchers("/api/teachers/login", "/api/students/login", "/api/teachers/create", "/api/students/create").permitAll() // Public endpoints
-            .anyRequest().authenticated() // All other endpoints require authentication
-            .and()
-            .exceptionHandling()
-            .authenticationEntryPoint((request, response, authException) -> {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("Unauthorized: " + authException.getMessage());
-            })
-            .and()
-            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http.csrf().disable()
+        .authorizeHttpRequests()
+        .requestMatchers(
+            "/api/teachers/login",
+            "/api/students/login",
+            "/api/teachers/create",
+            "/api/students/create",
+            "/api/parkequest/**" // ✅ Add this line
+        ).permitAll()
+        .anyRequest().authenticated()
+        .and()
+        .exceptionHandling()
+        .authenticationEntryPoint((request, response, authException) -> {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Unauthorized: " + authException.getMessage());
+        })
+        .and()
+        .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
-        return http.build();
-    }
+    return http.build();
+}
+
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {

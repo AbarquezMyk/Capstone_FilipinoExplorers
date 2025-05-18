@@ -25,21 +25,24 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
-            throws ServletException, IOException {
-        String path = request.getServletPath();
+protected void doFilterInternal(HttpServletRequest request,
+                                HttpServletResponse response,
+                                FilterChain filterChain)
+        throws ServletException, IOException {
+    String path = request.getServletPath();
 
-        // Skip JWT validation for public endpoints
-        if (path.equals("/api/teachers/create") || path.equals("/api/teachers/login") ||
-            path.equals("/api/students/create") || path.equals("/api/students/login")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
+    // ✅ Skip JWT validation for public and game-related endpoints
+    if (
+        path.startsWith("/api/parkequest/") ||
+        path.equals("/api/teachers/create") ||
+        path.equals("/api/teachers/login") ||
+        path.equals("/api/students/create") ||
+        path.equals("/api/students/login")
+    ) {
+        filterChain.doFilter(request, response);
+        return;
+    }
 
-
-    // ✅ Check Authorization header
     String authorizationHeader = request.getHeader("Authorization");
 
     if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
@@ -65,5 +68,6 @@ public class JwtFilter extends OncePerRequestFilter {
 
     filterChain.doFilter(request, response);
 }
+
 
 }

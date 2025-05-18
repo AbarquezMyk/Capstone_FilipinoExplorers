@@ -7,6 +7,7 @@ import GuessTheWord from './assets/Guesstheword';
 import MemoryGame from './assets/MemoryGame';
 import ParkeQuest from './assets/ParkeQuest';
 import PaaralanQuest from './assets/PaaralanQuest';
+import ParkeQuestGame from './assets/ParkeQuestGame';
 const App = () => {
   return (
     <Router>
@@ -20,6 +21,10 @@ const App = () => {
         <Route path="/memorygame" element={<MemoryGame />} />
         <Route path="/paaralanquest" element={<PaaralanQuest />} />
         <Route path="/parkequest" element={<ParkeQuest />} />
+
+
+        {/*Teacher side Parke Quest Questions Editor */}
+        <Route path="/parkequestgame" element={<ParkeQuestGame />} />
       </Routes>
     </Router>
   );

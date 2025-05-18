@@ -1,5 +1,11 @@
 package com.filipinoexplorers.capstone.controller;
 
+
+import com.filipinoexplorers.capstone.dto.ParkeQuestResultDTO;
+import com.filipinoexplorers.capstone.dto.ParkeQuestAnswerDTO;
+
+
+
 import com.filipinoexplorers.capstone.dto.ParkeQuestDTO;
 import com.filipinoexplorers.capstone.entity.ParkeQuestChoice;
 import com.filipinoexplorers.capstone.entity.ParkeQuestQuestion;
@@ -10,6 +16,8 @@ import com.filipinoexplorers.capstone.service.ParkeQuestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -55,5 +63,23 @@ public ResponseEntity<ParkeQuestQuestion> save(@RequestBody ParkeQuestDTO dto) {
    return ResponseEntity.ok(parkeQuestQuestionRepository.save(question)); // ✅ correct
 
 }
+
+
+@PostMapping("/check")
+public ResponseEntity<ParkeQuestResultDTO> checkAnswer(@RequestBody ParkeQuestAnswerDTO answerDTO) {
+    ParkeQuestQuestion question = parkeQuestQuestionRepository.findById(answerDTO.getQuestionId())
+        .orElse(null);
+
+    if (question == null) {
+        return ResponseEntity.badRequest().body(new ParkeQuestResultDTO(false, 0, "Question not found"));
+    }
+
+    boolean isCorrect = question.getCorrectAnswer().equalsIgnoreCase(answerDTO.getSelectedAnswer().trim());
+    int score = isCorrect ? (answerDTO.isUsedHint() ? 2 : 1) : (answerDTO.isUsedHint() ? 1 : 0);
+    String message = isCorrect ? "CORRECT ANSWER" : "WRONG ANSWER";
+
+    return ResponseEntity.ok(new ParkeQuestResultDTO(isCorrect, score, message));
+}
+
 
 }
