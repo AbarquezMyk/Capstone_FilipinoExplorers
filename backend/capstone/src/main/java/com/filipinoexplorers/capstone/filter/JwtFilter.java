@@ -31,17 +31,17 @@ protected void doFilterInternal(HttpServletRequest request,
         throws ServletException, IOException {
     String path = request.getServletPath();
 
-    // ✅ Skip JWT validation for public and game-related endpoints
     if (
-        path.startsWith("/api/parkequest/") ||
-        path.equals("/api/teachers/create") ||
-        path.equals("/api/teachers/login") ||
-        path.equals("/api/students/create") ||
-        path.equals("/api/students/login")
-    ) {
-        filterChain.doFilter(request, response);
-        return;
-    }
+    path.equals("/api/parkequest") ||           // exact match
+    path.startsWith("/api/parkequest/") ||      // subroutes
+    path.equals("/api/teachers/create") ||
+    path.equals("/api/teachers/login") ||
+    path.equals("/api/students/create") ||
+    path.equals("/api/students/login")
+) {
+    filterChain.doFilter(request, response);
+    return;
+}
 
     String authorizationHeader = request.getHeader("Authorization");
 

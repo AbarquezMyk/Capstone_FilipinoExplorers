@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Logo from "../assets/images/Logo.png";
-import Background from "../assets/images/Parke Game/Parke Quest BG.png"; // ✅ Background image
+import Background from "../assets/images/Parke Game/Parke Quest BG.png";
 
 const ParkeQuestGame = () => {
   const [story, setStory] = useState("");
@@ -10,6 +10,20 @@ const ParkeQuestGame = () => {
   const [fragments, setFragments] = useState(["", "", ""]);
   const [hint, setHint] = useState("");
   const [message, setMessage] = useState("");
+  const [questionNumber, setQuestionNumber] = useState(1);
+
+  useEffect(() => {
+    fetchQuestionCount();
+  }, []);
+
+  const fetchQuestionCount = async () => {
+    try {
+      const response = await axios.get("http://localhost:8080/api/parkequest");
+      setQuestionNumber(response.data.length + 1);
+    } catch (error) {
+      console.error("Error fetching questions:", error);
+    }
+  };
 
   const handleSplitSentence = () => {
     const words = fullSentence.trim().split(" ");
@@ -19,7 +33,11 @@ const ParkeQuestGame = () => {
     const part2 = words.slice(splitCount, splitCount * 2).join(" ");
     const part3 = words.slice(splitCount * 2).join(" ");
 
-    setFragments([part1, part2, part3]);
+    const initialFragments = [part1, part2, part3];
+
+    // Shuffle the fragments
+    const shuffled = [...initialFragments].sort(() => Math.random() - 0.5);
+    setFragments(shuffled);
   };
 
   const handleFragmentChange = (index, value) => {
@@ -37,21 +55,28 @@ const ParkeQuestGame = () => {
     }
 
     try {
-      await axios.post("http://localhost:8080/api/parkequest", {
+      const dto = {
         story,
         question,
         correctAnswer: fullSentence,
         choices: fragments,
         hint
-      });
-      setMessage("✅ Question submitted!");
+      };
+
+      await axios.post("http://localhost:8080/api/parkequest", dto);
+      setMessage("✅ Question #" + questionNumber + " submitted!");
+
+      // Reset form
       setStory("");
       setQuestion("");
       setFullSentence("");
       setFragments(["", "", ""]);
       setHint("");
+
+      // Update question number
+      setQuestionNumber((prev) => prev + 1);
     } catch (error) {
-      console.error(error);
+      console.error("Submit error:", error);
       setMessage("❌ Failed to submit. Try again.");
     }
   };
@@ -71,7 +96,9 @@ const ParkeQuestGame = () => {
         </div>
 
         <form onSubmit={handleSubmit}>
-          <h2 className="text-2xl font-bold mb-4 text-center text-[#073B4C]">Add Parke Quest Question</h2>
+          <h2 className="text-2xl font-bold mb-4 text-center text-[#073B4C]">
+            Add Parke Quest Question #{questionNumber}
+          </h2>
 
           <label className="block font-semibold">Story</label>
           <textarea
