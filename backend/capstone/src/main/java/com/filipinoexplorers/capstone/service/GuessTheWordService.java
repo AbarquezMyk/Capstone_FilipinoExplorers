@@ -38,6 +38,11 @@ public class GuessTheWordService {
             puzzle.setScore(10);
         }
         
+        // Set default hint enabled if not provided
+        if (puzzle.getHintEnabled() == null) {
+            puzzle.setHintEnabled(true);
+        }
+        
         return guessRepo.save(puzzle);
     }
     
@@ -124,6 +129,17 @@ public class GuessTheWordService {
         if (puzzleOpt.isPresent()) {
             GuessTheWordEntity puzzle = puzzleOpt.get();
             puzzle.setScore(score);
+            return guessRepo.save(puzzle);
+        }
+        return null;
+    }
+    
+    // Update hint status (enabled/disabled)
+    public GuessTheWordEntity updateHintStatus(Long puzzleId, Boolean hintEnabled) {
+        Optional<GuessTheWordEntity> puzzleOpt = guessRepo.findById(puzzleId);
+        if (puzzleOpt.isPresent()) {
+            GuessTheWordEntity puzzle = puzzleOpt.get();
+            puzzle.setHintEnabled(hintEnabled);
             return guessRepo.save(puzzle);
         }
         return null;

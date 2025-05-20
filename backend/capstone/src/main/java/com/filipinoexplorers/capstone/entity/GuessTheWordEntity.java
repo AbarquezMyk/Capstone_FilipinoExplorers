@@ -20,17 +20,19 @@ public class GuessTheWordEntity {
     private String hint;
     private Integer score = 10; // Default score of 10
     private Boolean active = false; // Flag to mark puzzles selected for gameplay
+    private Boolean hintEnabled = true; // Default to enabled
     
     // Default constructor
     public GuessTheWordEntity() {}
     
     // Constructor with parameters
-    public GuessTheWordEntity(String word, String clue, String shuffledLetters, String hint, Integer score) {
+    public GuessTheWordEntity(String word, String clue, String shuffledLetters, String hint, Integer score, Boolean hintEnabled) {
         this.word = word;
         this.clue = clue;
         this.shuffledLetters = shuffledLetters;
         this.hint = hint;
         this.score = score != null ? score : 10; // Default to 10 if not provided
+        this.hintEnabled = hintEnabled != null ? hintEnabled : true; // Default to true if not provided
     }
     
     // Getters and Setters
@@ -88,5 +90,13 @@ public class GuessTheWordEntity {
     
     public void setActive(Boolean active) {
         this.active = active;
+    }
+    
+    public Boolean getHintEnabled() {
+        return hintEnabled;
+    }
+    
+    public void setHintEnabled(Boolean hintEnabled) {
+        this.hintEnabled = hintEnabled;
     }
 }

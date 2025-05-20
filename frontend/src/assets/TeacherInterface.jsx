@@ -7,13 +7,14 @@ const TeacherInterface = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [currentPuzzle, setCurrentPuzzle] = useState({
-    id: null,
-    word: '',
-    clue: '',
-    hint: '',
-    shuffledLetters: '',
-    score: 10 // Default score is 10
-  });
+  id: null,
+  word: '',
+  clue: '',
+  hint: '',
+  shuffledLetters: '',
+  score: 10, // Default score is 10
+  hintEnabled: true // Default hint status is enabled
+});
   const [isEditing, setIsEditing] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [confirmationMessage, setConfirmationMessage] = useState('');
@@ -90,17 +91,18 @@ const TeacherInterface = () => {
   };
 
   const resetForm = () => {
-    setCurrentPuzzle({
-      id: null,
-      word: '',
-      clue: '',
-      hint: '',
-      shuffledLetters: '',
-      score: 10
-    });
-    setIsEditing(false);
-    setError(null);
-  };
+  setCurrentPuzzle({
+    id: null,
+    word: '',
+    clue: '',
+    hint: '',
+    shuffledLetters: '',
+    score: 10,
+    hintEnabled: true
+  });
+  setIsEditing(false);
+  setError(null);
+};
 
   const savePuzzle = async (e) => {
     e.preventDefault();
@@ -145,17 +147,18 @@ const TeacherInterface = () => {
   };
 
   const editPuzzle = (puzzle) => {
-    setCurrentPuzzle({
-      id: puzzle.id,
-      word: puzzle.word,
-      clue: puzzle.clue,
-      hint: puzzle.hint,
-      shuffledLetters: puzzle.shuffledLetters,
-      score: puzzle.score || 10
-    });
-    setIsEditing(true);
-    window.scrollTo(0, 0);
-  };
+  setCurrentPuzzle({
+    id: puzzle.id,
+    word: puzzle.word,
+    clue: puzzle.clue,
+    hint: puzzle.hint,
+    shuffledLetters: puzzle.shuffledLetters,
+    score: puzzle.score || 10,
+    hintEnabled: puzzle.hintEnabled !== false // Default to true if undefined
+  });
+  setIsEditing(true);
+  window.scrollTo(0, 0);
+};
 
   const deletePuzzle = async (id) => {
     if (window.confirm('Are you sure you want to delete this puzzle?')) {
@@ -266,6 +269,24 @@ const TeacherInterface = () => {
     }
   };
 
+  const toggleHintStatus = async (puzzleId, currentStatus) => {
+  try {
+    await axios.put(`${API_BASE_URL}/word-puzzles/${puzzleId}/hint-status`, { 
+      hintEnabled: !currentStatus 
+    });
+    fetchPuzzles(); // Refresh the list
+    setConfirmationMessage(`Hint ${!currentStatus ? 'enabled' : 'disabled'} successfully!`);
+    setShowConfirmation(true);
+    
+    // Hide confirmation after 3 seconds
+    setTimeout(() => {
+      setShowConfirmation(false);
+    }, 3000);
+  } catch (error) {
+    console.error('Error updating hint status:', error);
+    setError('Failed to update hint status. Please try again.');
+  }
+};
   return (
     <div className="min-h-screen bg-amber-50">
       {/* Header Section with logo on the left */}
@@ -486,6 +507,7 @@ const TeacherInterface = () => {
                       <th className="py-3 px-4 text-left border-b border-amber-200">Hint</th>
                       <th className="py-3 px-4 text-center border-b border-amber-200">Score</th>
                       <th className="py-3 px-4 text-center border-b border-amber-200">Active</th>
+                      <th className="py-3 px-4 text-center border-b border-amber-200">Hint Status</th>
                       <th className="py-3 px-4 text-left border-b border-amber-200">Actions</th>
                     </tr>
                   </thead>
@@ -558,6 +580,25 @@ const TeacherInterface = () => {
                                 Inactive
                               </span>
                             )}
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <div className="flex justify-center">
+                              <button
+                                onClick={() => toggleHintStatus(puzzle.id, puzzle.hintEnabled !== false)}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full ${
+                                  puzzle.hintEnabled !== false ? 'bg-green-500' : 'bg-gray-300'
+                                }`}
+                              >
+                                <span
+                                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+                                    puzzle.hintEnabled !== false ? 'translate-x-6' : 'translate-x-1'
+                                  }`}
+                                />
+                              </button>
+                            </div>
+                            <div className="text-xs mt-1">
+                              {puzzle.hintEnabled !== false ? 'Enabled' : 'Disabled'}
+                            </div>
                           </td>
                           <td className="py-3 px-4">
                             <div className="flex gap-3">

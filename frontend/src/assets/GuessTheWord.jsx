@@ -74,8 +74,8 @@ const GuessTheWord = () => {
     // Ensure we have a string, or create an empty array if not
     const letters = shuffledLetters ? shuffledLetters.split('') : [];
     
-    // Create an array of 14 positions (0-13)
-    const positions = Array.from({ length: 14 }, (_, i) => i);
+    // Create an array of 20 positions (0-19) - UPDATED FROM 14
+    const positions = Array.from({ length: 20 }, (_, i) => i);
     
     // Shuffle the positions array to randomize letter placement
     for (let i = positions.length - 1; i > 0; i--) {
@@ -83,8 +83,8 @@ const GuessTheWord = () => {
       [positions[i], positions[j]] = [positions[j], positions[i]];
     }
     
-    // Create a full array with 14 placeholders
-    const fullLetterArray = Array(14).fill('');
+    // Create a full array with 20 placeholders - UPDATED FROM 14
+    const fullLetterArray = Array(20).fill('');
     
     // Place the shuffled letters at random positions
     for (let i = 0; i < letters.length; i++) {
@@ -100,9 +100,9 @@ const GuessTheWord = () => {
       }
     }
     
-    // Split into two rows
-    const firstRow = fullLetterArray.slice(0, 7);
-    const secondRow = fullLetterArray.slice(7, 14);
+    // Split into two rows of 10 letters each - UPDATED FROM 7
+    const firstRow = fullLetterArray.slice(0, 10);
+    const secondRow = fullLetterArray.slice(10, 20);
     
     return [firstRow, secondRow];
   };
@@ -262,18 +262,30 @@ const GuessTheWord = () => {
 
   const toggleTranslation = async () => {
     try {
+      // Check if student has enough points to use hint
+      if (!isTranslated && score < 10) {
+        alert('Hindi sapat ang iyong puntos! Kailangan mo ng 10 puntos para makakuha ng hint.');
+        return;
+      }
+      
       if (!isTranslated) {
         setIsLoading(true);
         // Changed from /translation to /hint to fetch the hint instead of generic translation
         const response = await axios.get(`${API_BASE_URL}/hint/${currentPuzzle.id}`);
         
         if (response.data && response.data.hint) {
+          // Subtract 10 points when using a hint
+          setScore(prevScore => prevScore - 10);
+          
           // Update the current puzzle with hint
           setCurrentPuzzle({
             ...currentPuzzle,
             translatedClue: response.data.hint // Store the hint in translatedClue
           });
           setIsTranslated(true);
+          
+          // Alert the user that points have been deducted
+          alert('Ginagamit mo ang hint. Nabawasan ka ng 10 puntos.');
         }
       } else {
         // Toggle back to original clue
@@ -342,16 +354,10 @@ const GuessTheWord = () => {
         <div className="flex flex-col items-center justify-center space-y-8 mx-auto my-auto py-6">
 
           {/* Title - INCREASED HEIGHT AND WIDTH */}
-          <div className="bg-amber-100 rounded-lg p-3 border-2 border-amber-800 inline-block w-96 h-24 text-center mb-4 mr-15">
+          <div className="bg-amber-100 rounded-lg p-3 border-2 border-amber-800 inline-block w-96 h-24 text-center mb-4 mr-25">
             <h1 className="text-amber-900 font-bold text-2xl">Hulaan ang Salita</h1>
             <p className="text-amber-800 text-sm">Buoin ang salita na tinutukoy ng kahulugan</p>
           </div>
-
-          {/* Timer display */}
-          <div className="bg-amber-100 rounded-lg p-2 border-2 border-amber-800 text-center">
-            <p className="font-bold text-amber-900">Time Remaining: {formatTime(remainingTime)}</p>
-          </div>
-
           {/* Game completion message */}
           {gameCompleted && (
             <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative w-full text-center mb-4">
@@ -380,7 +386,7 @@ const GuessTheWord = () => {
             </div>
 
             {/* Game - increased internal spacing */}
-            <div className="bg-amber-800 rounded-lg p-6 shadow-lg flex-grow max-w-2xl flex flex-col space-y-8">
+            <div className="bg-amber-800 rounded-lg p-6 shadow-lg flex-grow max-w-3xl flex flex-col space-y-8">
 
               {/* Clue */}
               <div className="bg-amber-100 p-4 rounded-lg h-[150px] flex items-center justify-center relative">
@@ -391,9 +397,13 @@ const GuessTheWord = () => {
                 </p>
                 <button 
                   onClick={toggleTranslation}
-                  className="text-xs text-blue-600 hover:text-blue-800 absolute bottom-2 left-4 underline"
+                  className={`text-xs ${
+                    !isTranslated && score < 10 
+                      ? 'text-gray-400 cursor-not-allowed' 
+                      : 'text-blue-600 hover:text-blue-800'
+                  } absolute bottom-2 left-4 underline`}
                 >
-                  {isTranslated ? "Show Original" : "Show Hint"}
+                  {isTranslated ? "Show Original" : `Translate`}
                 </button>
               </div>
 
@@ -410,7 +420,7 @@ const GuessTheWord = () => {
                 ))}
               </div>
 
-              {/* Letter grid - increased spacing between rows */}
+              {/* Letter grid - increased spacing between rows and adjusted for 10 letters per row */}
               <div className="flex flex-col items-center gap-6">
                 <div className="flex gap-2">
                   {firstRowLetters.map((letter, idx) => (
@@ -418,7 +428,7 @@ const GuessTheWord = () => {
                       key={idx}
                       onClick={() => handleLetterClick(letter, idx)}
                       disabled={selectedLetters.some(item => item.index === idx)}
-                      className={`w-10 h-10 flex items-center justify-center font-bold text-lg bg-no-repeat bg-center bg-contain ${
+                      className={`w-9 h-9 flex items-center justify-center font-bold text-lg bg-no-repeat bg-center bg-contain ${
                         selectedLetters.some(item => item.index === idx) ? 'opacity-50' : ''
                       }`}
                       style={{ backgroundImage: `url(${letterTile})` }}
@@ -435,7 +445,7 @@ const GuessTheWord = () => {
                         key={idx}
                         onClick={() => handleLetterClick(letter, index)}
                         disabled={selectedLetters.some(item => item.index === index)}
-                        className={`w-10 h-10 flex items-center justify-center font-bold text-lg bg-no-repeat bg-center bg-contain ${
+                        className={`w-9 h-9 flex items-center justify-center font-bold text-lg bg-no-repeat bg-center bg-contain ${
                           selectedLetters.some(item => item.index === index) ? 'opacity-50' : ''
                         }`}
                         style={{ backgroundImage: `url(${letterTile})` }}
@@ -503,7 +513,7 @@ const GuessTheWord = () => {
           </div>
 
           {/* Navigation and check answer button - increased vertical spacing */}
-          <div className="flex justify-center w-full mt-6 mr-17">
+          <div className="flex justify-center w-full mt-6 mr-27">
             <div className="flex justify-center gap-x-6">
               <button
                 onClick={goToPrevPuzzle}
