@@ -74,12 +74,55 @@ public ResponseEntity<ParkeQuestResultDTO> checkAnswer(@RequestBody ParkeQuestAn
         return ResponseEntity.badRequest().body(new ParkeQuestResultDTO(false, 0, "Question not found"));
     }
 
-    boolean isCorrect = question.getCorrectAnswer().equalsIgnoreCase(answerDTO.getSelectedAnswer().trim());
+    String correct = question.getCorrectAnswer().trim().toLowerCase().replaceAll("[\\p{Punct}]", "");
+    String submitted = answerDTO.getSelectedAnswer().trim().toLowerCase().replaceAll("[\\p{Punct}]", "");
+
+    System.out.println("✔️ CORRECT:   " + correct);
+    System.out.println("🧪 SUBMITTED: " + submitted);
+
+    boolean isCorrect = correct.equals(submitted);
     int score = isCorrect ? (answerDTO.isUsedHint() ? 2 : 1) : (answerDTO.isUsedHint() ? 1 : 0);
     String message = isCorrect ? "CORRECT ANSWER" : "WRONG ANSWER";
 
     return ResponseEntity.ok(new ParkeQuestResultDTO(isCorrect, score, message));
 }
+
+@DeleteMapping("/{id}")
+public ResponseEntity<String> deleteQuestion(@PathVariable Long id) {
+    parkeQuestQuestionRepository.deleteById(id);
+    return ResponseEntity.ok("Question deleted successfully.");
+}
+
+@PutMapping("/{id}")
+public ResponseEntity<String> updateQuestion(@PathVariable Long id, @RequestBody ParkeQuestDTO dto) {
+    ParkeQuestQuestion question = parkeQuestQuestionRepository.findById(id).orElse(null);
+    if (question == null) {
+        return ResponseEntity.badRequest().body("Question not found.");
+    }
+
+    question.setStory(dto.getStory());
+    question.setQuestion(dto.getQuestion());
+    question.setCorrectAnswer(dto.getCorrectAnswer());
+    question.setHint(dto.getHint());
+
+    // Delete old choices first
+    parkeQuestChoiceRepository.deleteAll(question.getChoices());
+
+    // Create and set new choices
+    List<ParkeQuestChoice> updatedChoices = dto.getChoices().stream().map(choiceText -> {
+        ParkeQuestChoice c = new ParkeQuestChoice();
+        c.setChoice(choiceText);
+        c.setQuestion(question);
+        return c;
+    }).collect(Collectors.toList());
+
+    question.setChoices(updatedChoices);
+
+    parkeQuestQuestionRepository.save(question);
+    return ResponseEntity.ok("Question updated successfully.");
+}
+
+
 
 
 }

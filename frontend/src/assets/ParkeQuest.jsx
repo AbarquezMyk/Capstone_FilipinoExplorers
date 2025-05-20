@@ -3,6 +3,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+} from "@hello-pangea/dnd";
 
 import Logo from "../assets/images/Logo.png";
 import Background from "../assets/images/Parke Game/Parke Quest BG.png";
@@ -15,27 +20,47 @@ const ParkeQuest = () => {
   const navigate = useNavigate();
   const [questions, setQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [orderedChoices, setOrderedChoices] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState([]);
   const [progress] = useState(60);
   const [usedHint, setUsedHint] = useState(false);
+  const [showHint, setShowHint] = useState(false);
   const [resultMessage, setResultMessage] = useState("");
 
   useEffect(() => {
     axios
       .get("http://localhost:8080/api/parkequest")
       .then((res) => {
-        console.log("Fetched questions:", res.data); // ✅ Log fetched data
-        setQuestions(res.data);
+        const filtered = res.data.filter(
+          (q) =>
+            q.story &&
+            q.question &&
+            Array.isArray(q.choices) &&
+            q.choices.length > 0
+        );
+        setQuestions(filtered);
+        setCurrentIndex(0);
       })
       .catch((err) => console.error("Failed to fetch questions:", err));
   }, []);
 
-  const handleFragmentClick = (frag) => {
-    if (selectedOrder.includes(frag)) {
-      setSelectedOrder(selectedOrder.filter((f) => f !== frag));
-    } else {
-      setSelectedOrder([...selectedOrder, frag]);
+  useEffect(() => {
+    if (questions.length > 0) {
+      const choices = questions[currentIndex].choices.map((c) => c.choice);
+      setOrderedChoices(choices);
+      setSelectedOrder(choices);
     }
+  }, [questions, currentIndex]);
+
+  const handleDragEnd = (result) => {
+    if (!result.destination) return;
+
+    const updated = Array.from(orderedChoices);
+    const [moved] = updated.splice(result.source.index, 1);
+    updated.splice(result.destination.index, 0, moved);
+
+    setOrderedChoices(updated);
+    setSelectedOrder(updated);
   };
 
   const checkAnswer = async () => {
@@ -55,21 +80,20 @@ const ParkeQuest = () => {
 
   const goToNext = () => {
     setCurrentIndex((prev) => Math.min(prev + 1, questions.length - 1));
-    setSelectedOrder([]);
     setUsedHint(false);
+    setShowHint(false);
     setResultMessage("");
   };
 
   const goToPrevious = () => {
     setCurrentIndex((prev) => Math.max(prev - 1, 0));
-    setSelectedOrder([]);
     setUsedHint(false);
+    setShowHint(false);
     setResultMessage("");
   };
 
   const current = questions[currentIndex];
 
-  // ✅ Show loading message before rendering
   if (!questions.length) {
     return (
       <div
@@ -119,23 +143,41 @@ const ParkeQuest = () => {
             {/* Question */}
             <h2 className="text-lg font-bold text-center">{current?.question}</h2>
 
-            {/* Fragments */}
-            <div className="flex flex-col items-center gap-2 mt-2">
-              {current?.choices.map((frag, idx) => (
-                <div key={idx} className="cursor-pointer" onClick={() => handleFragmentClick(frag)}>
-                  <div className="relative">
-                    <img
-                      src={WoodPanel}
-                      alt={`Fragment ${idx}`}
-                      className="h-[120px] w-full max-w-[460px] object-contain"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center text-white font-bold text-lg px-4 text-center">
-                      {frag}
-                    </div>
+            {/* Fragments (Drag-and-drop) */}
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <Droppable droppableId="fragments">
+                {(provided) => (
+                  <div
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}
+                    className="flex flex-col items-center gap-3 mt-2"
+                  >
+                    {orderedChoices.map((frag, idx) => (
+                      <Draggable key={`${frag}-${idx}`} draggableId={`${frag}-${idx}`} index={idx}>
+                        {(provided) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            className="relative"
+                          >
+                            <img
+                              src={WoodPanel}
+                              alt={`Fragment ${idx}`}
+                              className="h-[120px] w-full max-w-[460px] object-contain"
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center text-white font-bold text-lg px-4 text-center">
+                              {frag}
+                            </div>
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
                   </div>
-                </div>
-              ))}
-            </div>
+                )}
+              </Droppable>
+            </DragDropContext>
           </div>
 
           {/* Navigation */}
@@ -161,22 +203,30 @@ const ParkeQuest = () => {
           <div className="relative w-[325px] h-[70px]">
             <div className="absolute -top-[100px] left-1/2 transform -translate-x-1/2 bg-[#4e2c1c] rounded-[24px] w-full h-[80px] flex items-center justify-center shadow-md">
               <div className="bg-[#fde68a] h-[60px] w-[280px] rounded-[20px] px-4 py-2 shadow-inner text-center flex items-center justify-center font-bold text-lg text-[#4e2c1c]">
-                {selectedOrder.length > 0 ? selectedOrder.join(" ") : "Piliin ang tamang ayos ng sagot"}
+                {showHint ? current?.hint : ""}
               </div>
             </div>
           </div>
 
           {/* Number Grid */}
-          <div className="relative w-[280px] h-[230px] bg-[#8B4A32] rounded-[24px] shadow-lg flex items-center justify-center">
-            <div className="grid grid-cols-4 gap-x-5 gap-y-5">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+          <div className="relative w-[280px] min-h-[230px] bg-[#8B4A32] rounded-[24px] shadow-lg">
+            <div
+              className={`absolute top-4 left-3 grid ${
+                questions.length <= 5
+                  ? "grid-cols-5"
+                  : questions.length <= 10
+                  ? "grid-cols-5"
+                  : "grid-cols-6"
+              } gap-x-3 gap-y-3`}
+            >
+              {questions.map((_, num) => (
                 <div
-                  key={num}
-                  className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-base ${
-                    currentIndex === num - 1 ? "bg-orange-500 text-white" : "bg-[#F9D9A6] text-black"
+                  key={num + 1}
+                  className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm ${
+                    currentIndex === num ? "bg-orange-500 text-white" : "bg-[#F9D9A6] text-black"
                   }`}
                 >
-                  {num}
+                  {num + 1}
                 </div>
               ))}
             </div>
@@ -184,7 +234,10 @@ const ParkeQuest = () => {
 
           {/* Hint & Submit */}
           <button
-            onClick={() => setUsedHint(true)}
+            onClick={() => {
+              setUsedHint(true);
+              setShowHint(true);
+            }}
             className="w-[250px] py-3 rounded-full bg-[#1982fc] hover:bg-blue-700 text-white font-bold text-lg shadow-md"
           >
             HINT

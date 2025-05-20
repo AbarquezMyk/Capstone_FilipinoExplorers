@@ -11,15 +11,18 @@ const ParkeQuestGame = () => {
   const [hint, setHint] = useState("");
   const [message, setMessage] = useState("");
   const [questionNumber, setQuestionNumber] = useState(1);
+  const [allQuestions, setAllQuestions] = useState([]);
+  const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
-    fetchQuestionCount();
+    fetchAllQuestions();
   }, []);
 
-  const fetchQuestionCount = async () => {
+  const fetchAllQuestions = async () => {
     try {
-      const response = await axios.get("http://localhost:8080/api/parkequest");
-      setQuestionNumber(response.data.length + 1);
+      const res = await axios.get("http://localhost:8080/api/parkequest");
+      setAllQuestions(res.data);
+      setQuestionNumber(res.data.length + 1);
     } catch (error) {
       console.error("Error fetching questions:", error);
     }
@@ -46,6 +49,29 @@ const ParkeQuestGame = () => {
     setFragments(updated);
   };
 
+  const handleEdit = (q) => {
+    setEditingId(q.id);
+    setStory(q.story);
+    setQuestion(q.question);
+    setFullSentence(q.correctAnswer);
+    setHint(q.hint);
+    setFragments(q.choices.map(c => c.choice));
+    setMessage("✏️ Editing Question #" + q.id);
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this question?")) {
+      try {
+        await axios.delete(`http://localhost:8080/api/parkequest/${id}`);
+        setMessage("🗑️ Question deleted.");
+        fetchAllQuestions();
+      } catch (error) {
+        console.error("Delete error:", error);
+        setMessage("❌ Failed to delete question.");
+      }
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -54,17 +80,24 @@ const ParkeQuestGame = () => {
       return;
     }
 
-    try {
-      const dto = {
-        story,
-        question,
-        correctAnswer: fullSentence,
-        choices: fragments,
-        hint
-      };
+    const dto = {
+      story,
+      question,
+      correctAnswer: fullSentence,
+      choices: fragments,
+      hint
+    };
 
-      await axios.post("http://localhost:8080/api/parkequest", dto);
-      setMessage("✅ Question #" + questionNumber + " submitted!");
+    try {
+      if (editingId) {
+        await axios.put(`http://localhost:8080/api/parkequest/${editingId}`, dto);
+        setMessage(`✅ Question #${editingId} updated!`);
+        setEditingId(null);
+      } else {
+        await axios.post("http://localhost:8080/api/parkequest", dto);
+        setMessage("✅ Question #" + questionNumber + " submitted!");
+        setQuestionNumber((prev) => prev + 1);
+      }
 
       // Reset form
       setStory("");
@@ -73,8 +106,9 @@ const ParkeQuestGame = () => {
       setFragments(["", "", ""]);
       setHint("");
 
-      // Update question number
-      setQuestionNumber((prev) => prev + 1);
+      // Refresh list
+      fetchAllQuestions();
+
     } catch (error) {
       console.error("Submit error:", error);
       setMessage("❌ Failed to submit. Try again.");
@@ -83,21 +117,21 @@ const ParkeQuestGame = () => {
 
   return (
     <div
-      className="min-h-screen bg-cover bg-center flex items-center justify-center"
-      style={{
-        backgroundImage: `url(${Background})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
-    >
-      <div className="w-full max-w-2xl bg-white bg-opacity-90 p-8 rounded-2xl shadow-lg font-['Fredoka'] border border-gray-200">
+  className="min-h-screen bg-cover bg-center flex items-center justify-center py-10 px-4"
+  style={{
+    backgroundImage: `url(${Background})`,
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+  }}
+>
+  <div className="w-full max-w-2xl bg-white bg-opacity-90 p-8 rounded-2xl shadow-lg font-['Fredoka'] border border-gray-200">
         <div className="flex justify-center mb-6">
           <img src={Logo} alt="Logo" className="w-40" />
         </div>
 
         <form onSubmit={handleSubmit}>
           <h2 className="text-2xl font-bold mb-4 text-center text-[#073B4C]">
-            Add Parke Quest Question #{questionNumber}
+            {editingId ? `Edit Parke Quest Question #${editingId}` : `Add Parke Quest Question #${questionNumber}`}
           </h2>
 
           <label className="block font-semibold">Story</label>
@@ -155,11 +189,32 @@ const ParkeQuestGame = () => {
             type="submit"
             className="w-full bg-[#06D6A0] text-white font-bold py-2 px-4 rounded-lg hover:bg-[#05c594] transition-all"
           >
-            Submit Question
+            {editingId ? "Update Question" : "Submit Question"}
           </button>
 
           {message && <p className="mt-4 text-center text-sm">{message}</p>}
         </form>
+
+        {/* All Questions Section */}
+        <div className="mt-10">
+          <h3 className="text-lg font-bold mb-2 text-[#073B4C]">Existing Questions</h3>
+          {allQuestions.length === 0 && (
+            <p className="text-sm italic text-gray-500">No questions yet.</p>
+          )}
+          {allQuestions.map((q) => (
+            <div key={q.id} className="bg-white border rounded p-4 mb-3 shadow-sm">
+              <p><strong>Q#{q.id}:</strong> {q.question}</p>
+              <p className="text-sm italic">Story: {q.story}</p>
+              <p className="text-sm">Answer: <span className="text-green-700">{q.correctAnswer}</span></p>
+              <p className="text-sm">Hint: {q.hint}</p>
+              <p className="text-sm">Choices: {q.choices.map(c => c.choice).join(", ")}</p>
+              <div className="flex gap-2 mt-2">
+                <button onClick={() => handleEdit(q)} className="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-1 rounded">Edit</button>
+                <button onClick={() => handleDelete(q.id)} className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded">Delete</button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
