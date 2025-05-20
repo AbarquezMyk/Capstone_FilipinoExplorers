@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -25,6 +26,15 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf().disable()
             .authorizeHttpRequests()
+            .requestMatchers(HttpMethod.GET, "/api/word-puzzles/**").permitAll()
+            .requestMatchers(HttpMethod.POST, "/api/word-puzzles/**").permitAll()
+            .requestMatchers(HttpMethod.PUT, "/api/word-puzzles/**").permitAll()
+            .requestMatchers(HttpMethod.DELETE, "/api/word-puzzles/**").permitAll()
+            .requestMatchers(HttpMethod.GET, "/api/translation/**").permitAll()
+            .requestMatchers(HttpMethod.GET, "/api/active-puzzles/**").permitAll()
+            .requestMatchers(HttpMethod.POST, "/api/active-puzzles/**").permitAll()
+            .requestMatchers(HttpMethod.PUT, "/api/active-puzzles/**").permitAll()
+            .requestMatchers(HttpMethod.DELETE, "/api/active-puzzles/**").permitAll()
             .requestMatchers("/api/teachers/login", 
             "/api/students/login", 
             "/api/teachers/create", 
@@ -32,7 +42,10 @@ public class SecurityConfig {
             "/api/word-puzzles",
             "/api/word-puzzles/{id}",
             "/api/check-answer",
-            "/api/hint/{puzzleId}"
+            "/api/hint/{puzzleId}",
+            "/api/teacher-interface",
+            "/api/word-puzzles/{id}",
+            "/api/active-puzzles/{id}"
             ).permitAll() // Open endpoints
             .anyRequest().authenticated() // Secure all other endpoints
             .and()

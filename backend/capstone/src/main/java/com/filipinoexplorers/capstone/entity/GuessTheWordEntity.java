@@ -8,7 +8,6 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "word_puzzles")
-
 public class GuessTheWordEntity {
     
     @Id
@@ -19,16 +18,19 @@ public class GuessTheWordEntity {
     private String clue;
     private String shuffledLetters;
     private String hint;
+    private Integer score = 10; // Default score of 10
+    private Boolean active = false; // Flag to mark puzzles selected for gameplay
     
     // Default constructor
     public GuessTheWordEntity() {}
     
     // Constructor with parameters
-    public GuessTheWordEntity(String word, String clue, String shuffledLetters, String hint) {
+    public GuessTheWordEntity(String word, String clue, String shuffledLetters, String hint, Integer score) {
         this.word = word;
         this.clue = clue;
         this.shuffledLetters = shuffledLetters;
         this.hint = hint;
+        this.score = score != null ? score : 10; // Default to 10 if not provided
     }
     
     // Getters and Setters
@@ -70,5 +72,21 @@ public class GuessTheWordEntity {
     
     public void setHint(String hint) {
         this.hint = hint;
+    }
+    
+    public Integer getScore() {
+        return score;
+    }
+    
+    public void setScore(Integer score) {
+        this.score = score;
+    }
+    
+    public Boolean getActive() {
+        return active;
+    }
+    
+    public void setActive(Boolean active) {
+        this.active = active;
     }
 }

@@ -11,13 +11,16 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-
 public class GuessTheWordService {
     @Autowired
-    private GuessTheWordRepository guessRepo; //puzzleRepository;
+    private GuessTheWordRepository guessRepo;
     
     public List<GuessTheWordEntity> getAllPuzzles() {
         return guessRepo.findAll();
+    }
+    
+    public List<GuessTheWordEntity> getActivePuzzles() {
+        return guessRepo.findByActiveTrue();
     }
     
     public Optional<GuessTheWordEntity> getPuzzleById(Long id) {
@@ -29,7 +32,17 @@ public class GuessTheWordService {
         if (puzzle.getShuffledLetters() == null || puzzle.getShuffledLetters().isEmpty()) {
             puzzle.setShuffledLetters(shuffleWord(puzzle.getWord()));
         }
+        
+        // Set default score if not provided
+        if (puzzle.getScore() == null) {
+            puzzle.setScore(10);
+        }
+        
         return guessRepo.save(puzzle);
+    }
+    
+    public void deletePuzzle(Long id) {
+        guessRepo.deleteById(id);
     }
     
     public boolean checkAnswer(Long puzzleId, String answer) {
@@ -45,19 +58,75 @@ public class GuessTheWordService {
         return puzzle.map(GuessTheWordEntity::getHint).orElse("No hint available");
     }
     
+    // Get next active puzzle for gameplay
     public Optional<GuessTheWordEntity> getNextPuzzle(Long currentPuzzleId) {
-        List<GuessTheWordEntity> allPuzzles = getAllPuzzles();
+        List<GuessTheWordEntity> activePuzzles = getActivePuzzles();
         
-        for (int i = 0; i < allPuzzles.size(); i++) {
-            if (allPuzzles.get(i).getId().equals(currentPuzzleId)) {
-                if (i + 1 < allPuzzles.size()) {
-                    return Optional.of(allPuzzles.get(i + 1));
+        // If no active puzzles defined, get all puzzles (for backward compatibility)
+        if (activePuzzles.isEmpty()) {
+            activePuzzles = getAllPuzzles();
+        }
+        
+        for (int i = 0; i < activePuzzles.size(); i++) {
+            if (activePuzzles.get(i).getId().equals(currentPuzzleId)) {
+                if (i + 1 < activePuzzles.size()) {
+                    return Optional.of(activePuzzles.get(i + 1));
                 }
                 break;
             }
         }
         
         return Optional.empty();
+    }
+    
+    // Set active puzzles for gameplay
+    public void setActivePuzzles(List<Long> puzzleIds) {
+        // First, mark all puzzles as inactive
+        List<GuessTheWordEntity> allPuzzles = getAllPuzzles();
+        for (GuessTheWordEntity puzzle : allPuzzles) {
+            puzzle.setActive(false);
+        }
+        guessRepo.saveAll(allPuzzles);
+        
+        // Then, mark selected puzzles as active
+        if (puzzleIds != null && !puzzleIds.isEmpty()) {
+            for (Long id : puzzleIds) {
+                Optional<GuessTheWordEntity> puzzleOpt = guessRepo.findById(id);
+                if (puzzleOpt.isPresent()) {
+                    GuessTheWordEntity puzzle = puzzleOpt.get();
+                    puzzle.setActive(true);
+                    guessRepo.save(puzzle);
+                }
+            }
+        }
+    }
+    
+    // Get the first active puzzle for gameplay
+    public Optional<GuessTheWordEntity> getFirstActivePuzzle() {
+        List<GuessTheWordEntity> activePuzzles = getActivePuzzles();
+        
+        if (!activePuzzles.isEmpty()) {
+            return Optional.of(activePuzzles.get(0));
+        } else {
+            // Fallback to first puzzle in the database if no active puzzles
+            List<GuessTheWordEntity> allPuzzles = getAllPuzzles();
+            if (!allPuzzles.isEmpty()) {
+                return Optional.of(allPuzzles.get(0));
+            }
+        }
+        
+        return Optional.empty();
+    }
+    
+    // Update puzzle score
+    public GuessTheWordEntity updatePuzzleScore(Long puzzleId, Integer score) {
+        Optional<GuessTheWordEntity> puzzleOpt = guessRepo.findById(puzzleId);
+        if (puzzleOpt.isPresent()) {
+            GuessTheWordEntity puzzle = puzzleOpt.get();
+            puzzle.setScore(score);
+            return guessRepo.save(puzzle);
+        }
+        return null;
     }
     
     // Shuffle a word and ensure all letters are included
@@ -75,50 +144,4 @@ public class GuessTheWordService {
         
         return shuffled.toString();
     }
-    
-    // Add sample puzzles for testing
-    public void initializeSamplePuzzles() {
-        if (guessRepo.count() == 0) {
-            List<GuessTheWordEntity> samplePuzzles = new ArrayList<>();
-            
-            samplePuzzles.add(new GuessTheWordEntity(
-                "BAYANIHAN", 
-                "Isang taong handang magsakripisyo para sa kapwa at bayan.", 
-                "BAHNNYAAI", 
-                "Ito ay isang katangian ng mga Pilipino na nagpapakita ng pagtutulungan."
-            ));
-            
-            samplePuzzles.add(new GuessTheWordEntity(
-                "KALIKASAN", 
-                "Lahat ng bagay sa mundo na hindi gawa ng tao.", 
-                "KASANLAKI", 
-                "Dapat nating pangalagaan at protektahan ito."
-            ));
-            
-            samplePuzzles.add(new GuessTheWordEntity(
-                "MATIYAGA", 
-                "Katangian ng taong di agad sumusuko.", 
-                "MAAYATGI", 
-                "Mahalaga ito sa pag-aaral at pagtatrabaho."
-            ));
-            
-            samplePuzzles.add(new GuessTheWordEntity(
-                "HALAMAN", 
-                "Buhay na bagay na lumalaki ngunit hindi nakakalakad.", 
-                "ANLAHMA", 
-                "Ito ay gumagawa ng sarili nitong pagkain."
-            ));
-            
-            samplePuzzles.add(new GuessTheWordEntity(
-                "WATAWAT", 
-                "Simbolo ng bansa.", 
-                "TATWAWA", 
-                "Mayroong tatlong kulay: pula, asul, at puti."
-            ));
-            
-            guessRepo.saveAll(samplePuzzles);
-        }
-    }
-
 }
-//f1LiPin0123_ExPl0reRs!!

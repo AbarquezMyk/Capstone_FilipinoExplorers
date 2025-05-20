@@ -3,10 +3,12 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Homepage from './assets/Homepage';
 import SignUpType from './assets/SignUpType';
 import RegisterTeacher from './assets/RegisterTeacher';
-import GuessTheWord from './assets/Guesstheword';
+import GuessTheWord from './assets/GuessTheWord';
 import MemoryGame from './assets/MemoryGame';
 import ParkeQuest from './pages/ParkeQuest';
 import PaaralanQuest from './pages/PaaralanQuest';
+import TeacherInterface from './assets/TeacherInterface';
+import './index.css';
 const App = () => {
   return (
     <Router>
@@ -20,6 +22,7 @@ const App = () => {
         <Route path="/memorygame" element={<MemoryGame />} />
         <Route path="/paaralanquest" element={<PaaralanQuest />} />
         <Route path="/parkequest" element={<ParkeQuest />} />
+        <Route path="/teacher-interface" element={<TeacherInterface />} />
       </Routes>
     </Router>
   );
