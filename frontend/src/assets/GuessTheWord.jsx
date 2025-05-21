@@ -300,10 +300,16 @@ const GuessTheWord = () => {
     }
   };
 
-  const getLetterHint = () => {
+  const getLetterHint = async () => {
   // Check if the puzzle exists
   if (!currentPuzzle) {
     alert('Could not provide a hint at this time - no puzzle loaded.');
+    return;
+  }
+  
+  // First check if hints are enabled for this puzzle
+  if (currentPuzzle.hintEnabled === false) {
+    alert('Hints are not available for this puzzle.');
     return;
   }
   
@@ -377,9 +383,8 @@ const GuessTheWord = () => {
   setScore(score - 10);
   
   // Show hint success message
- alert(`Hint: ${numLettersToDisable} maling letra ay na-disable. -10 puntos.`);
+  alert(`Hint: ${numLettersToDisable} maling letra ay na-disable. -10 puntos.`);
 };
-
 // Modified handleSelecte
 //dLetterClick to be more robust
 const handleSelectedLetterClick = (index) => {
