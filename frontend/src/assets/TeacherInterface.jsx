@@ -11,9 +11,10 @@ const TeacherInterface = () => {
   word: '',
   clue: '',
   hint: '',
+  translation: '', // Add translation field
   shuffledLetters: '',
-  score: 10, // Default score is 10
-  hintEnabled: true // Default hint status is enabled
+  score: 10,
+  hintEnabled: true
 });
   const [isEditing, setIsEditing] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -83,12 +84,12 @@ const TeacherInterface = () => {
   };
 
   const validateForm = () => {
-    if (!currentPuzzle.word || !currentPuzzle.clue || !currentPuzzle.hint) {
-      setError('Please fill in all required fields: Word, Clue, and Hint');
-      return false;
-    }
-    return true;
-  };
+  if (!currentPuzzle.word || !currentPuzzle.clue || !currentPuzzle.translation) {
+    setError('Please fill in all required fields: Word, Clue, Hint, and Translation');
+    return false;
+  }
+  return true;
+};
 
   const resetForm = () => {
   setCurrentPuzzle({
@@ -96,6 +97,7 @@ const TeacherInterface = () => {
     word: '',
     clue: '',
     hint: '',
+    translation: '', // Add translation field
     shuffledLetters: '',
     score: 10,
     hintEnabled: true
@@ -152,9 +154,10 @@ const TeacherInterface = () => {
     word: puzzle.word,
     clue: puzzle.clue,
     hint: puzzle.hint,
+    translation: puzzle.translation || '', // Add translation field with fallback
     shuffledLetters: puzzle.shuffledLetters,
     score: puzzle.score || 10,
-    hintEnabled: puzzle.hintEnabled !== false // Default to true if undefined
+    hintEnabled: puzzle.hintEnabled !== false
   });
   setIsEditing(true);
   window.scrollTo(0, 0);
@@ -417,22 +420,21 @@ const TeacherInterface = () => {
                   />
                   <p className="text-gray-500 text-sm mt-2">The main clue shown to players</p>
                 </div>
-                
                 <div className="md:col-span-2 mt-2">
-                  <label className="block text-amber-800 font-medium mb-3">
-                    Hint*
-                  </label>
-                  <textarea
-                    name="hint"
-                    value={currentPuzzle.hint}
-                    onChange={handleInputChange}
-                    className="w-full border border-amber-300 rounded-md px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                    placeholder="Enter hint (e.g., Ito ay isang katangian ng mga Pilipino na nagpapakita ng pagtutulungan.)"
-                    rows="3"
-                    required
-                  />
-                  <p className="text-gray-500 text-sm mt-2">Additional hint that can be revealed to help players</p>
-                </div>
+                <label className="block text-amber-800 font-medium mb-3">
+                  Translation* 
+                </label>
+                <textarea
+                  name="translation"
+                  value={currentPuzzle.translation}
+                  onChange={handleInputChange}
+                  className="w-full border border-amber-300 rounded-md px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  placeholder="Enter English translation of the clue (e.g., A person willing to sacrifice for others and country.)"
+                  rows="3"
+                  required
+                />
+                <p className="text-gray-500 text-sm mt-2">English translation of the clue or definition</p>
+              </div>
               </div>
               
               <div className="flex justify-center gap-6 mt-10">
@@ -504,7 +506,7 @@ const TeacherInterface = () => {
                       <th className="py-3 px-4 text-left border-b border-amber-200">ID</th>
                       <th className="py-3 px-4 text-left border-b border-amber-200">Word</th>
                       <th className="py-3 px-4 text-left border-b border-amber-200">Clue</th>
-                      <th className="py-3 px-4 text-left border-b border-amber-200">Hint</th>
+                      <th className="py-3 px-4 text-left border-b border-amber-200">Translation</th>
                       <th className="py-3 px-4 text-center border-b border-amber-200">Score</th>
                       <th className="py-3 px-4 text-center border-b border-amber-200">Active</th>
                       <th className="py-3 px-4 text-center border-b border-amber-200">Hint Status</th>
@@ -534,7 +536,9 @@ const TeacherInterface = () => {
                             {puzzle.clue.length > 50 ? `${puzzle.clue.substring(0, 50)}...` : puzzle.clue}
                           </td>
                           <td className="py-3 px-4">
-                            {puzzle.hint.length > 50 ? `${puzzle.hint.substring(0, 50)}...` : puzzle.hint}
+                            {puzzle.translation && puzzle.translation.length > 50 
+                              ? `${puzzle.translation.substring(0, 50)}...` 
+                              : (puzzle.translation || 'N/A')}
                           </td>
                           <td className="py-3 px-4 text-center">
                             {editingScore === puzzle.id ? (

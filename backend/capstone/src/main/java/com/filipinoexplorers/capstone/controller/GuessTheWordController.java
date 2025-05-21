@@ -201,19 +201,25 @@ public class GuessTheWordController {
         return ResponseEntity.ok(response);
     }
     
-    // Translation endpoint
+    // Updated translation endpoint to use the dedicated translation field
     @GetMapping("/translation/{puzzleId}")
     public ResponseEntity<Map<String, String>> getTranslation(@PathVariable Long puzzleId) {
-        Optional<GuessTheWordEntity> puzzle = guessServ.getPuzzleById(puzzleId);
+        Optional<GuessTheWordEntity> puzzleOpt = guessServ.getPuzzleById(puzzleId);
         
-        if (!puzzle.isPresent()) {
+        if (!puzzleOpt.isPresent()) {
             return ResponseEntity.notFound().build();
         }
         
-        // In a real application, you might call a translation API here
-        // For now, we'll just return a placeholder
+        GuessTheWordEntity puzzle = puzzleOpt.get();
         Map<String, String> response = new HashMap<>();
-        response.put("translation", "English translation would appear here");
+        
+        // Use the dedicated translation field if available
+        if (puzzle.getTranslation() != null && !puzzle.getTranslation().isEmpty()) {
+            response.put("translation", puzzle.getTranslation());
+        } else {
+            // Fallback to a placeholder if not set
+            response.put("translation", "Translation not available");
+        }
         
         return ResponseEntity.ok(response);
     }
