@@ -10,8 +10,7 @@ const TeacherInterface = () => {
   id: null,
   word: '',
   clue: '',
-  hint: '',
-  translation: '', // Add translation field
+  translation: '', 
   shuffledLetters: '',
   score: 10,
   hintEnabled: true
@@ -85,7 +84,7 @@ const TeacherInterface = () => {
 
   const validateForm = () => {
   if (!currentPuzzle.word || !currentPuzzle.clue || !currentPuzzle.translation) {
-    setError('Please fill in all required fields: Word, Clue, Hint, and Translation');
+    setError('Please fill in all required fields: Word, Clue, and Translation');
     return false;
   }
   return true;
@@ -96,7 +95,6 @@ const TeacherInterface = () => {
     id: null,
     word: '',
     clue: '',
-    hint: '',
     translation: '', // Add translation field
     shuffledLetters: '',
     score: 10,
@@ -153,7 +151,6 @@ const TeacherInterface = () => {
     id: puzzle.id,
     word: puzzle.word,
     clue: puzzle.clue,
-    hint: puzzle.hint,
     translation: puzzle.translation || '', // Add translation field with fallback
     shuffledLetters: puzzle.shuffledLetters,
     score: puzzle.score || 10,
