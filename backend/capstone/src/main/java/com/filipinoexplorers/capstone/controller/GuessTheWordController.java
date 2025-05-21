@@ -87,6 +87,24 @@ public class GuessTheWordController {
         return ResponseEntity.ok(updatedPuzzle);
     }
     
+    @PutMapping("/word-puzzles/{id}/hint-status")
+    public ResponseEntity<GuessTheWordEntity> updateHintStatus(
+            @PathVariable Long id, 
+            @RequestBody Map<String, Boolean> hintStatusMap) {
+        
+        Boolean hintEnabled = hintStatusMap.get("hintEnabled");
+        if (hintEnabled == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        
+        GuessTheWordEntity updatedPuzzle = guessServ.updateHintStatus(id, hintEnabled);
+        if (updatedPuzzle == null) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        return ResponseEntity.ok(updatedPuzzle);
+    }
+    
     @DeleteMapping("/word-puzzles/{id}")
     public ResponseEntity<Map<String, Boolean>> deletePuzzle(@PathVariable Long id) {
         Optional<GuessTheWordEntity> puzzle = guessServ.getPuzzleById(id);
@@ -157,28 +175,51 @@ public class GuessTheWordController {
     }
 
     @GetMapping("/hint/{puzzleId}")
-    public ResponseEntity<Map<String, String>> getHint(@PathVariable Long puzzleId) {
-        String hint = guessServ.getHint(puzzleId);
+    public ResponseEntity<Map<String, Object>> getHint(@PathVariable Long puzzleId) {
+        Optional<GuessTheWordEntity> puzzleOpt = guessServ.getPuzzleById(puzzleId);
         
-        Map<String, String> response = new HashMap<>();
-        response.put("hint", hint);
+        Map<String, Object> response = new HashMap<>();
+        
+        if (!puzzleOpt.isPresent()) {
+            response.put("error", "Puzzle not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+        
+        GuessTheWordEntity puzzle = puzzleOpt.get();
+        
+        // Check if hints are enabled for this puzzle
+        if (puzzle.getHintEnabled() != null && !puzzle.getHintEnabled()) {
+            response.put("available", false);
+            response.put("message", "Hints are disabled for this puzzle");
+            return ResponseEntity.ok(response);
+        }
+        
+        // Hints are enabled, return the hint
+        response.put("available", true);
+        response.put("hint", puzzle.getHint());
         
         return ResponseEntity.ok(response);
     }
     
-    // Translation endpoint
+    // Updated translation endpoint to use the dedicated translation field
     @GetMapping("/translation/{puzzleId}")
     public ResponseEntity<Map<String, String>> getTranslation(@PathVariable Long puzzleId) {
-        Optional<GuessTheWordEntity> puzzle = guessServ.getPuzzleById(puzzleId);
+        Optional<GuessTheWordEntity> puzzleOpt = guessServ.getPuzzleById(puzzleId);
         
-        if (!puzzle.isPresent()) {
+        if (!puzzleOpt.isPresent()) {
             return ResponseEntity.notFound().build();
         }
         
-        // In a real application, you might call a translation API here
-        // For now, we'll just return a placeholder
+        GuessTheWordEntity puzzle = puzzleOpt.get();
         Map<String, String> response = new HashMap<>();
-        response.put("translation", "English translation would appear here");
+        
+        // Use the dedicated translation field if available
+        if (puzzle.getTranslation() != null && !puzzle.getTranslation().isEmpty()) {
+            response.put("translation", puzzle.getTranslation());
+        } else {
+            // Fallback to a placeholder if not set
+            response.put("translation", "Translation not available");
+        }
         
         return ResponseEntity.ok(response);
     }

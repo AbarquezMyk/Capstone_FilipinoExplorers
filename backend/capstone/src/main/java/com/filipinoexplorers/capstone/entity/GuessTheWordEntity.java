@@ -18,19 +18,24 @@ public class GuessTheWordEntity {
     private String clue;
     private String shuffledLetters;
     private String hint;
+    // Add new field for translation
+    private String translation;
     private Integer score = 10; // Default score of 10
     private Boolean active = false; // Flag to mark puzzles selected for gameplay
+    private Boolean hintEnabled = true; // Default to enabled
     
     // Default constructor
     public GuessTheWordEntity() {}
     
     // Constructor with parameters
-    public GuessTheWordEntity(String word, String clue, String shuffledLetters, String hint, Integer score) {
+    public GuessTheWordEntity(String word, String clue, String shuffledLetters, String hint, String translation, Integer score, Boolean hintEnabled) {
         this.word = word;
         this.clue = clue;
         this.shuffledLetters = shuffledLetters;
         this.hint = hint;
+        this.translation = translation;
         this.score = score != null ? score : 10; // Default to 10 if not provided
+        this.hintEnabled = hintEnabled != null ? hintEnabled : true; // Default to true if not provided
     }
     
     // Getters and Setters
@@ -74,6 +79,14 @@ public class GuessTheWordEntity {
         this.hint = hint;
     }
     
+    public String getTranslation() {
+        return translation;
+    }
+    
+    public void setTranslation(String translation) {
+        this.translation = translation;
+    }
+    
     public Integer getScore() {
         return score;
     }
@@ -88,5 +101,13 @@ public class GuessTheWordEntity {
     
     public void setActive(Boolean active) {
         this.active = active;
+    }
+    
+    public Boolean getHintEnabled() {
+        return hintEnabled;
+    }
+    
+    public void setHintEnabled(Boolean hintEnabled) {
+        this.hintEnabled = hintEnabled;
     }
 }

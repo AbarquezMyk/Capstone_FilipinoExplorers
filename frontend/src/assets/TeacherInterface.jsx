@@ -7,13 +7,15 @@ const TeacherInterface = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [currentPuzzle, setCurrentPuzzle] = useState({
-    id: null,
-    word: '',
-    clue: '',
-    hint: '',
-    shuffledLetters: '',
-    score: 10 // Default score is 10
-  });
+  id: null,
+  word: '',
+  clue: '',
+  hint: '',
+  translation: '', // Add translation field
+  shuffledLetters: '',
+  score: 10,
+  hintEnabled: true
+});
   const [isEditing, setIsEditing] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [confirmationMessage, setConfirmationMessage] = useState('');
@@ -82,25 +84,27 @@ const TeacherInterface = () => {
   };
 
   const validateForm = () => {
-    if (!currentPuzzle.word || !currentPuzzle.clue || !currentPuzzle.hint) {
-      setError('Please fill in all required fields: Word, Clue, and Hint');
-      return false;
-    }
-    return true;
-  };
+  if (!currentPuzzle.word || !currentPuzzle.clue || !currentPuzzle.translation) {
+    setError('Please fill in all required fields: Word, Clue, Hint, and Translation');
+    return false;
+  }
+  return true;
+};
 
   const resetForm = () => {
-    setCurrentPuzzle({
-      id: null,
-      word: '',
-      clue: '',
-      hint: '',
-      shuffledLetters: '',
-      score: 10
-    });
-    setIsEditing(false);
-    setError(null);
-  };
+  setCurrentPuzzle({
+    id: null,
+    word: '',
+    clue: '',
+    hint: '',
+    translation: '', // Add translation field
+    shuffledLetters: '',
+    score: 10,
+    hintEnabled: true
+  });
+  setIsEditing(false);
+  setError(null);
+};
 
   const savePuzzle = async (e) => {
     e.preventDefault();
@@ -145,17 +149,19 @@ const TeacherInterface = () => {
   };
 
   const editPuzzle = (puzzle) => {
-    setCurrentPuzzle({
-      id: puzzle.id,
-      word: puzzle.word,
-      clue: puzzle.clue,
-      hint: puzzle.hint,
-      shuffledLetters: puzzle.shuffledLetters,
-      score: puzzle.score || 10
-    });
-    setIsEditing(true);
-    window.scrollTo(0, 0);
-  };
+  setCurrentPuzzle({
+    id: puzzle.id,
+    word: puzzle.word,
+    clue: puzzle.clue,
+    hint: puzzle.hint,
+    translation: puzzle.translation || '', // Add translation field with fallback
+    shuffledLetters: puzzle.shuffledLetters,
+    score: puzzle.score || 10,
+    hintEnabled: puzzle.hintEnabled !== false
+  });
+  setIsEditing(true);
+  window.scrollTo(0, 0);
+};
 
   const deletePuzzle = async (id) => {
     if (window.confirm('Are you sure you want to delete this puzzle?')) {
@@ -266,6 +272,24 @@ const TeacherInterface = () => {
     }
   };
 
+  const toggleHintStatus = async (puzzleId, currentStatus) => {
+  try {
+    await axios.put(`${API_BASE_URL}/word-puzzles/${puzzleId}/hint-status`, { 
+      hintEnabled: !currentStatus 
+    });
+    fetchPuzzles(); // Refresh the list
+    setConfirmationMessage(`Hint ${!currentStatus ? 'enabled' : 'disabled'} successfully!`);
+    setShowConfirmation(true);
+    
+    // Hide confirmation after 3 seconds
+    setTimeout(() => {
+      setShowConfirmation(false);
+    }, 3000);
+  } catch (error) {
+    console.error('Error updating hint status:', error);
+    setError('Failed to update hint status. Please try again.');
+  }
+};
   return (
     <div className="min-h-screen bg-amber-50">
       {/* Header Section with logo on the left */}
@@ -396,22 +420,21 @@ const TeacherInterface = () => {
                   />
                   <p className="text-gray-500 text-sm mt-2">The main clue shown to players</p>
                 </div>
-                
                 <div className="md:col-span-2 mt-2">
-                  <label className="block text-amber-800 font-medium mb-3">
-                    Hint*
-                  </label>
-                  <textarea
-                    name="hint"
-                    value={currentPuzzle.hint}
-                    onChange={handleInputChange}
-                    className="w-full border border-amber-300 rounded-md px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                    placeholder="Enter hint (e.g., Ito ay isang katangian ng mga Pilipino na nagpapakita ng pagtutulungan.)"
-                    rows="3"
-                    required
-                  />
-                  <p className="text-gray-500 text-sm mt-2">Additional hint that can be revealed to help players</p>
-                </div>
+                <label className="block text-amber-800 font-medium mb-3">
+                  Translation* 
+                </label>
+                <textarea
+                  name="translation"
+                  value={currentPuzzle.translation}
+                  onChange={handleInputChange}
+                  className="w-full border border-amber-300 rounded-md px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  placeholder="Enter English translation of the clue (e.g., A person willing to sacrifice for others and country.)"
+                  rows="3"
+                  required
+                />
+                <p className="text-gray-500 text-sm mt-2">English translation of the clue or definition</p>
+              </div>
               </div>
               
               <div className="flex justify-center gap-6 mt-10">
@@ -483,9 +506,10 @@ const TeacherInterface = () => {
                       <th className="py-3 px-4 text-left border-b border-amber-200">ID</th>
                       <th className="py-3 px-4 text-left border-b border-amber-200">Word</th>
                       <th className="py-3 px-4 text-left border-b border-amber-200">Clue</th>
-                      <th className="py-3 px-4 text-left border-b border-amber-200">Hint</th>
+                      <th className="py-3 px-4 text-left border-b border-amber-200">Translation</th>
                       <th className="py-3 px-4 text-center border-b border-amber-200">Score</th>
                       <th className="py-3 px-4 text-center border-b border-amber-200">Active</th>
+                      <th className="py-3 px-4 text-center border-b border-amber-200">Hint Status</th>
                       <th className="py-3 px-4 text-left border-b border-amber-200">Actions</th>
                     </tr>
                   </thead>
@@ -512,7 +536,9 @@ const TeacherInterface = () => {
                             {puzzle.clue.length > 50 ? `${puzzle.clue.substring(0, 50)}...` : puzzle.clue}
                           </td>
                           <td className="py-3 px-4">
-                            {puzzle.hint.length > 50 ? `${puzzle.hint.substring(0, 50)}...` : puzzle.hint}
+                            {puzzle.translation && puzzle.translation.length > 50 
+                              ? `${puzzle.translation.substring(0, 50)}...` 
+                              : (puzzle.translation || 'N/A')}
                           </td>
                           <td className="py-3 px-4 text-center">
                             {editingScore === puzzle.id ? (
@@ -558,6 +584,25 @@ const TeacherInterface = () => {
                                 Inactive
                               </span>
                             )}
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <div className="flex justify-center">
+                              <button
+                                onClick={() => toggleHintStatus(puzzle.id, puzzle.hintEnabled !== false)}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full ${
+                                  puzzle.hintEnabled !== false ? 'bg-green-500' : 'bg-gray-300'
+                                }`}
+                              >
+                                <span
+                                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+                                    puzzle.hintEnabled !== false ? 'translate-x-6' : 'translate-x-1'
+                                  }`}
+                                />
+                              </button>
+                            </div>
+                            <div className="text-xs mt-1">
+                              {puzzle.hintEnabled !== false ? 'Enabled' : 'Disabled'}
+                            </div>
                           </td>
                           <td className="py-3 px-4">
                             <div className="flex gap-3">
