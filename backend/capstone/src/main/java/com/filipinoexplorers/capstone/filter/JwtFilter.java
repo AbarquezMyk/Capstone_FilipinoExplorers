@@ -10,6 +10,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import org.springframework.lang.NonNull;
 
 @Component
 public class JwtFilter extends OncePerRequestFilter {
@@ -22,15 +23,16 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
+protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                @NonNull HttpServletResponse response,
+                                @NonNull FilterChain filterChain)
             throws ServletException, IOException {
         String path = request.getServletPath();
 
         // Skip JWT validation for public endpoints
-        if (path.equals("/api/teachers/create") || path.equals("/api/teachers/login") ||
-            path.equals("/api/students/create") || path.equals("/api/students/login")) {
+        if  (path.equals("/api/teachers/create") || path.equals("/api/teachers/login") ||
+    path.equals("/api/students/create") || path.equals("/api/students/login") ||
+    path.equals("/api/paaralan-quest/questions")) {
             filterChain.doFilter(request, response);
             return;
         }

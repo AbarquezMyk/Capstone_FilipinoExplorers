@@ -27,7 +27,9 @@ public class SecurityConfig {
                     new AntPathRequestMatcher("/api/teachers/login"),
                     new AntPathRequestMatcher("/api/students/login"),
                     new AntPathRequestMatcher("/api/teachers/create"),
-                    new AntPathRequestMatcher("/api/students/create")
+                    new AntPathRequestMatcher("/api/students/create"),
+                    new AntPathRequestMatcher("/api/paaralan-quest/questions")
+                    
                 ).permitAll()
                 .anyRequest().authenticated()
             )
