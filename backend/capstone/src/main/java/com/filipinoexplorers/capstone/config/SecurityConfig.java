@@ -24,12 +24,14 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
     http.csrf().disable()
         .authorizeHttpRequests()
         .requestMatchers(
-            "/api/teachers/login",
-            "/api/students/login",
-            "/api/teachers/create",
-            "/api/students/create",
-            "/api/parkequest/**" // ✅ Add this line
-        ).permitAll()
+    "/api/teachers/login",
+    "/api/students/login",
+    "/api/teachers/create",
+    "/api/students/create",
+    "/api/parkequest/**",      // already present
+    "/api/parkequest/check"    // ✅ add this one too
+).permitAll()
+
         .anyRequest().authenticated()
         .and()
         .exceptionHandling()

@@ -31,15 +31,10 @@ const ParkeQuestGame = () => {
   const handleSplitSentence = () => {
     const words = fullSentence.trim().split(" ");
     const splitCount = Math.ceil(words.length / 3);
-
     const part1 = words.slice(0, splitCount).join(" ");
     const part2 = words.slice(splitCount, splitCount * 2).join(" ");
     const part3 = words.slice(splitCount * 2).join(" ");
-
-    const initialFragments = [part1, part2, part3];
-
-    // Shuffle the fragments
-    const shuffled = [...initialFragments].sort(() => Math.random() - 0.5);
+    const shuffled = [part1, part2, part3].sort(() => Math.random() - 0.5);
     setFragments(shuffled);
   };
 
@@ -62,7 +57,11 @@ const ParkeQuestGame = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this question?")) {
       try {
-        await axios.delete(`http://localhost:8080/api/parkequest/${id}`);
+        await axios.delete(`http://localhost:8080/api/parkequest/${id}`, {
+          headers: {
+            Authorization: "Bearer dummy-token",
+          },
+        });
         setMessage("🗑️ Question deleted.");
         fetchAllQuestions();
       } catch (error) {
@@ -85,30 +84,34 @@ const ParkeQuestGame = () => {
       question,
       correctAnswer: fullSentence,
       choices: fragments,
-      hint
+      hint,
     };
 
     try {
       if (editingId) {
-        await axios.put(`http://localhost:8080/api/parkequest/${editingId}`, dto);
+        await axios.put(`http://localhost:8080/api/parkequest/${editingId}`, dto, {
+          headers: {
+            Authorization: "Bearer dummy-token",
+          },
+        });
         setMessage(`✅ Question #${editingId} updated!`);
         setEditingId(null);
       } else {
-        await axios.post("http://localhost:8080/api/parkequest", dto);
+        await axios.post("http://localhost:8080/api/parkequest", dto, {
+          headers: {
+            Authorization: "Bearer dummy-token",
+          },
+        });
         setMessage("✅ Question #" + questionNumber + " submitted!");
         setQuestionNumber((prev) => prev + 1);
       }
 
-      // Reset form
       setStory("");
       setQuestion("");
       setFullSentence("");
       setFragments(["", "", ""]);
       setHint("");
-
-      // Refresh list
       fetchAllQuestions();
-
     } catch (error) {
       console.error("Submit error:", error);
       setMessage("❌ Failed to submit. Try again.");
@@ -117,14 +120,14 @@ const ParkeQuestGame = () => {
 
   return (
     <div
-  className="min-h-screen bg-cover bg-center flex items-center justify-center py-10 px-4"
-  style={{
-    backgroundImage: `url(${Background})`,
-    backgroundSize: "cover",
-    backgroundPosition: "center",
-  }}
->
-  <div className="w-full max-w-2xl bg-white bg-opacity-90 p-8 rounded-2xl shadow-lg font-['Fredoka'] border border-gray-200">
+      className="min-h-screen bg-cover bg-center flex items-center justify-center py-10 px-4"
+      style={{
+        backgroundImage: `url(${Background})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      <div className="w-full max-w-2xl bg-white bg-opacity-90 p-8 rounded-2xl shadow-lg font-['Fredoka'] border border-gray-200">
         <div className="flex justify-center mb-6">
           <img src={Logo} alt="Logo" className="w-40" />
         </div>
@@ -195,7 +198,6 @@ const ParkeQuestGame = () => {
           {message && <p className="mt-4 text-center text-sm">{message}</p>}
         </form>
 
-        {/* All Questions Section */}
         <div className="mt-10">
           <h3 className="text-lg font-bold mb-2 text-[#073B4C]">Existing Questions</h3>
           {allQuestions.length === 0 && (
