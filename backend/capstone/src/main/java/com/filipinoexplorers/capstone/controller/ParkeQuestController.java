@@ -105,24 +105,18 @@ public ResponseEntity<String> updateQuestion(@PathVariable Long id, @RequestBody
     question.setCorrectAnswer(dto.getCorrectAnswer());
     question.setHint(dto.getHint());
 
-    // Delete old choices first
-    parkeQuestChoiceRepository.deleteAll(question.getChoices());
+    // ✅ SAFELY MODIFY the existing collection
+    question.getChoices().clear(); // Hibernate will treat cleared ones as orphans and delete them
 
-    // Create and set new choices
-    List<ParkeQuestChoice> updatedChoices = dto.getChoices().stream().map(choiceText -> {
+    for (String choiceText : dto.getChoices()) {
         ParkeQuestChoice c = new ParkeQuestChoice();
         c.setChoice(choiceText);
-        c.setQuestion(question);
-        return c;
-    }).collect(Collectors.toList());
-
-    question.setChoices(updatedChoices);
+        c.setQuestion(question); // set back-reference
+        question.getChoices().add(c);
+    }
 
     parkeQuestQuestionRepository.save(question);
     return ResponseEntity.ok("Question updated successfully.");
 }
-
-
-
 
 }

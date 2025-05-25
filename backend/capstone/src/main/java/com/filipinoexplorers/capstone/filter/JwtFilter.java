@@ -24,51 +24,49 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
-            throws ServletException, IOException {
+protected void doFilterInternal(HttpServletRequest request,
+                                HttpServletResponse response,
+                                FilterChain filterChain)
+        throws ServletException, IOException {
 
-        String path = request.getRequestURI(); // Accurate path detection
+    String path = request.getRequestURI(); // Accurate path detection
 
-        // ✅ Allow all ParkeQuest-related endpoints (GET, POST, PUT, DELETE) or preflight
-        if (path.startsWith("/api/parkequest") || request.getMethod().equalsIgnoreCase("OPTIONS")) {
+    // ✅ Allow all ParkeQuest-related endpoints (GET, POST, PUT, DELETE) or preflight
+    if (path.startsWith("/api/parkequest") || request.getMethod().equalsIgnoreCase("OPTIONS")) {
+        filterChain.doFilter(request, response);
+        return;
+    }
+
+    // 🔒 All other endpoints require token
+    String authorizationHeader = request.getHeader("Authorization");
+
+    if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+        String token = authorizationHeader.substring(7);
+
+        // ✅ TEMPORARY BYPASS FOR TESTING
+        if ("dummy-token".equals(token)) {
+            System.out.println("🔓 Skipping token validation for dummy-token.");
             filterChain.doFilter(request, response);
             return;
         }
 
-        // 🔒 All other endpoints require token
-        String authorizationHeader = request.getHeader("Authorization");
-
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            String token = authorizationHeader.substring(7);
-
-            // ✅ TEMPORARY BYPASS FOR DEVELOPMENT
-            if ("dummy-token".equals(token)) {
-                System.out.println("🔓 Dummy token detected — skipping validation for development.");
-                filterChain.doFilter(request, response);
+        try {
+            if (!jwtUtil.validateToken(token)) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("Invalid or expired token");
                 return;
             }
-
-            try {
-                if (!jwtUtil.validateToken(token)) {
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.getWriter().write("Invalid or expired token");
-                    return;
-                }
-            } catch (Exception e) {
-                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                response.getWriter().write("Token validation failed: " + e.getMessage());
-                return;
-            }
-
-            // ✅ Valid token
-            filterChain.doFilter(request, response);
-
-        } else {
-            // ❌ No token provided
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Authorization header is missing");
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.getWriter().write("Token validation failed: " + e.getMessage());
+            return;
         }
+
+        filterChain.doFilter(request, response);
+    } else {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.getWriter().write("Authorization header is missing");
     }
+}
+
 }
