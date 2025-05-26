@@ -10,7 +10,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/paaralan-quest/score")
-@CrossOrigin(origins = "http://localhost:5173") // ✅ This is crucial
 public class PaaralanQuestScoreController {
 
     private final PaaralanQuestScoreService scoreService;
@@ -20,8 +19,7 @@ public class PaaralanQuestScoreController {
         this.scoreService = scoreService;
     }
 
-    @PostMapping("/submit-score")
-
+    @PostMapping("/submit")
     public ResponseEntity<PaaralanQuestScore> submitScore(@RequestBody PaaralanQuestScore score) {
         PaaralanQuestScore saved = scoreService.saveScore(score);
         return ResponseEntity.ok(saved);

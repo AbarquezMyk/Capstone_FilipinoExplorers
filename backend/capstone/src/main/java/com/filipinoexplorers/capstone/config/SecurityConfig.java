@@ -24,12 +24,12 @@ public class SecurityConfig {
             .securityMatcher("/**") // Applies this config to all endpoints
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers(
-                    new AntPathRequestMatcher("/api/teachers/login"),
-                    new AntPathRequestMatcher("/api/students/login"),
-                    new AntPathRequestMatcher("/api/teachers/create"),
-                    new AntPathRequestMatcher("/api/students/create"),
-                    new AntPathRequestMatcher("/api/paaralan-quest/questions")
-                    
+                    "/api/paaralan-quest/score/**",
+                    "/api/paaralan-quest/questions",
+                    "/api/teachers/login",
+                    "/api/students/login",
+                    "/api/teachers/create",
+                    "/api/students/create"
                 ).permitAll()
                 .anyRequest().authenticated()
             )

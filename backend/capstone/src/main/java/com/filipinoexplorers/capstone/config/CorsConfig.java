@@ -1,5 +1,5 @@
 package com.filipinoexplorers.capstone.config;
-
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
@@ -21,8 +21,14 @@ public class CorsConfig {
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
-
+ 
         System.out.println("✅ CorsFilter is registered and active");
         return new CorsFilter(source);
+    }
+    @Bean
+    public FilterRegistrationBean<CorsFilter> corsFilterRegistration() {
+        FilterRegistrationBean<CorsFilter> registration = new FilterRegistrationBean<>(corsFilter());
+        registration.setOrder(0); // Ensures CORS filter runs early
+        return registration;
     }
 }
