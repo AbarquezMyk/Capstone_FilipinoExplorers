@@ -3,11 +3,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import {
-  DragDropContext,
-  Droppable,
-  Draggable,
-} from "@hello-pangea/dnd";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 import Logo from "../assets/images/Logo.png";
 import Background from "../assets/images/Parke Game/Parke Quest BG.png";
@@ -19,13 +15,22 @@ import TimerLog from "../assets/images/Buttons and Other/Timer Log.png";
 const ParkeQuest = () => {
   const navigate = useNavigate();
   const [questions, setQuestions] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(() =>
+    parseInt(localStorage.getItem("pq_index")) || 0
+  );
   const [orderedChoices, setOrderedChoices] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState([]);
   const [progress] = useState(60);
   const [usedHint, setUsedHint] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [resultMessage, setResultMessage] = useState("");
+  const [score, setScore] = useState(() =>
+    parseInt(localStorage.getItem("pq_score")) || 0
+  );
+  const [answeredIndices, setAnsweredIndices] = useState(() => {
+    const saved = localStorage.getItem("pq_answered");
+    return saved ? JSON.parse(saved) : [];
+  });
 
   useEffect(() => {
     axios
@@ -39,7 +44,6 @@ const ParkeQuest = () => {
             q.choices.length > 0
         );
         setQuestions(filtered);
-        setCurrentIndex(0);
       })
       .catch((err) => console.error("Failed to fetch questions:", err));
   }, []);
@@ -54,11 +58,9 @@ const ParkeQuest = () => {
 
   const handleDragEnd = (result) => {
     if (!result.destination) return;
-
     const updated = Array.from(orderedChoices);
     const [moved] = updated.splice(result.source.index, 1);
     updated.splice(result.destination.index, 0, moved);
-
     setOrderedChoices(updated);
     setSelectedOrder(updated);
   };
@@ -72,21 +74,50 @@ const ParkeQuest = () => {
         selectedAnswer: studentAnswer,
         usedHint,
       });
+
       setResultMessage(res.data.message);
+
+      if (!answeredIndices.includes(currentIndex)) {
+        const newScore = score + res.data.score;
+        const newAnswered = [...answeredIndices, currentIndex];
+        setScore(newScore);
+        setAnsweredIndices(newAnswered);
+        localStorage.setItem("pq_score", newScore.toString());
+        localStorage.setItem("pq_answered", JSON.stringify(newAnswered));
+      }
     } catch (err) {
       console.error("Check answer failed:", err);
     }
   };
 
-  const goToNext = () => {
-    setCurrentIndex((prev) => Math.min(prev + 1, questions.length - 1));
+  const goToNext = async () => {
+    if (currentIndex === questions.length - 1) {
+      try {
+        await axios.post("http://localhost:8080/api/parkequest/score", {
+          totalScore: score,
+        });
+        localStorage.removeItem("pq_score");
+        localStorage.removeItem("pq_answered");
+        localStorage.removeItem("pq_index");
+      } catch (err) {
+        console.error("Failed to save final score:", err);
+      }
+    } else {
+      const newIndex = Math.min(currentIndex + 1, questions.length - 1);
+      setCurrentIndex(newIndex);
+      localStorage.setItem("pq_index", newIndex.toString());
+    }
+
     setUsedHint(false);
     setShowHint(false);
     setResultMessage("");
   };
 
   const goToPrevious = () => {
-    setCurrentIndex((prev) => Math.max(prev - 1, 0));
+    const newIndex = Math.max(currentIndex - 1, 0);
+    setCurrentIndex(newIndex);
+    localStorage.setItem("pq_index", newIndex.toString());
+
     setUsedHint(false);
     setShowHint(false);
     setResultMessage("");
@@ -110,7 +141,7 @@ const ParkeQuest = () => {
       className="flex flex-col min-h-screen bg-cover bg-center font-['Fredoka'] relative"
       style={{ backgroundImage: `url(${Background})` }}
     >
-      {/* Logo top-left */}
+      {/* Logo */}
       <div className="absolute top-4 left-4 z-10">
         <img src={Logo} alt="Filipino Explorers Logo" className="w-40" />
       </div>
@@ -123,9 +154,8 @@ const ParkeQuest = () => {
         </div>
       </div>
 
-      {/* Main Layout */}
       <div className="flex flex-1 justify-center items-center gap-10 px-6 py-12">
-        {/* Timer Stick */}
+        {/* Timer */}
         <div className="relative w-[140px] h-[450px] flex items-center justify-center">
           <img src={TimerLog} alt="Timer Stick" className="absolute inset-0 w-full h-full object-contain z-10" />
           <div
@@ -137,13 +167,9 @@ const ParkeQuest = () => {
         {/* Game Panel */}
         <div className="flex flex-col items-center gap-4">
           <div className="relative bg-[#4e2c1c] rounded-[30px] w-[600px] min-h-[500px] flex flex-col items-center justify-start shadow-md px-6 py-4 text-white gap-3">
-            {/* Story */}
             <p className="text-sm italic text-center text-[#fde68a]">{current?.story}</p>
-
-            {/* Question */}
             <h2 className="text-lg font-bold text-center">{current?.question}</h2>
 
-            {/* Fragments (Drag-and-drop) */}
             <DragDropContext onDragEnd={handleDragEnd}>
               <Droppable droppableId="fragments">
                 {(provided) => (
@@ -197,9 +223,9 @@ const ParkeQuest = () => {
           </div>
         </div>
 
-        {/* Right Side Controls */}
+        {/* Right Panel */}
         <div className="flex flex-col items-center gap-5">
-          {/* Word Box */}
+          {/* Hint Box */}
           <div className="relative w-[325px] h-[70px]">
             <div className="absolute -top-[100px] left-1/2 transform -translate-x-1/2 bg-[#4e2c1c] rounded-[24px] w-full h-[80px] flex items-center justify-center shadow-md">
               <div className="bg-[#fde68a] h-[60px] w-[280px] rounded-[20px] px-4 py-2 shadow-inner text-center flex items-center justify-center font-bold text-lg text-[#4e2c1c]">
@@ -208,7 +234,7 @@ const ParkeQuest = () => {
             </div>
           </div>
 
-          {/* Number Grid */}
+          {/* Question Progress */}
           <div className="relative w-[280px] min-h-[230px] bg-[#8B4A32] rounded-[24px] shadow-lg">
             <div
               className={`absolute top-4 left-3 grid ${
@@ -232,7 +258,7 @@ const ParkeQuest = () => {
             </div>
           </div>
 
-          {/* Hint & Submit */}
+          {/* Hint + Submit */}
           <button
             onClick={() => {
               setUsedHint(true);
@@ -249,10 +275,24 @@ const ParkeQuest = () => {
             SUBMIT
           </button>
 
-          {/* Result Message */}
+          {/* Score */}
+          <div className="text-white text-lg font-bold text-center mt-2">
+            Score: <span className="text-green-300">{score}</span> / {questions.length * 2}
+          </div>
+
+          {/* Result */}
           {resultMessage && (
             <div className="text-white text-lg font-bold text-center mt-4">
               {resultMessage === "CORRECT ANSWER" ? "✅ Tama!" : "❌ Mali. Subukan muli."}
+            </div>
+          )}
+
+          {/* Completion Message */}
+          {currentIndex === questions.length - 1 && (
+            <div className="text-white mt-6 font-bold text-center text-xl">
+              🎉 SESSION FINISHED!
+              <br />
+              Your final score: <span className="text-green-300">{score} / {questions.length * 2}</span>
             </div>
           )}
         </div>

@@ -9,8 +9,10 @@ import com.filipinoexplorers.capstone.dto.ParkeQuestAnswerDTO;
 import com.filipinoexplorers.capstone.dto.ParkeQuestDTO;
 import com.filipinoexplorers.capstone.entity.ParkeQuestChoice;
 import com.filipinoexplorers.capstone.entity.ParkeQuestQuestion;
+import com.filipinoexplorers.capstone.entity.ParkeQuestScore;
 import com.filipinoexplorers.capstone.repository.ParkeQuestChoiceRepository;
 import com.filipinoexplorers.capstone.repository.ParkeQuestQuestionRepository;
+import com.filipinoexplorers.capstone.repository.ParkeQuestScoreRepository;
 import com.filipinoexplorers.capstone.service.ParkeQuestService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +34,9 @@ private ParkeQuestQuestionRepository parkeQuestQuestionRepository;
 
 @Autowired
 private ParkeQuestChoiceRepository parkeQuestChoiceRepository;
+
+@Autowired
+private ParkeQuestScoreRepository parkeQuestScoreRepository;
 
 
     public ParkeQuestController(ParkeQuestService service) {
@@ -118,5 +123,14 @@ public ResponseEntity<String> updateQuestion(@PathVariable Long id, @RequestBody
     parkeQuestQuestionRepository.save(question);
     return ResponseEntity.ok("Question updated successfully.");
 }
+
+
+
+@PostMapping("/submit-score")
+public ResponseEntity<String> submitScore(@RequestBody ParkeQuestScore score) {
+    parkeQuestScoreRepository.save(score);
+    return ResponseEntity.ok("Score saved.");
+}
+
 
 }
