@@ -5,6 +5,7 @@ import Logo from '../assets/images/Logo.png';
 import StickImage from '../assets/images/Buttons and Other/Timer Log.png';
 import LeftArrow from '../assets/images/Buttons and Other/button prev.png';
 import RightArrow from '../assets/images/Buttons and Other/button next.png';
+<<<<<<< HEAD
 
 console.log("✅ PaaralanQuest component is rendering.");
 
@@ -29,6 +30,12 @@ const iconStyle = {
 
 // Replace this with all your 45+ entries
 const fullStoryData = [ {
+=======
+import { useLocation } from 'react-router-dom';
+// ✅ Sample Story Data (Add 13 more later)
+const storyData = [
+  {
+>>>>>>> 1157c9e (Base Group)
     story: "Si Juan ay isang masipag na estudyante na laging tumutulong sa kanyang mga kaklase.",
     question: "Ano ang ipinapakita ni Juan sa kanyang mga kaklase?",
     choices: ["Katamaran", "Kasipagan", "Kawalang-galang", "Pag-aalinlangan"],
@@ -680,6 +687,7 @@ const PaaralanQuest = () => {
   const [storyData, setStoryData] = useState([]);
   const [answeredQuestions, setAnsweredQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+<<<<<<< HEAD
   const [selectedChoice, setSelectedChoice] = useState(null);
   const [score, setScore] = useState(0);
   const [feedback, setFeedback] = useState("");
@@ -769,6 +777,11 @@ const PaaralanQuest = () => {
 
 
 
+=======
+  const current = storyData[currentIndex];
+  const location = useLocation();
+  const playerName = location.state?.playerName || "Player";
+>>>>>>> 1157c9e (Base Group)
   const handleNext = () => {
   if (currentIndex < storyData.length - 1) {
     setCurrentIndex(currentIndex + 1);

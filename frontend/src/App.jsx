@@ -22,6 +22,23 @@ const App = () => {
         <Route path="/parkequest" element={<ParkeQuest />} />
       </Routes>
     </Router>
+    <Routes>
+  <Route path="/" element={<Homepage />} />
+  <Route path="/signup" element={<SignUpType />} />
+  <Route path="/register-teacher" element={<RegisterTeacher />} />
+  
+  {/* Games Section Path */}
+  <Route path="/guesstheword" element={<GuessTheWord />} />
+  <Route path="/memorygame" element={<MemoryGame />} />
+  <Route path="/parkequest" element={<ParkeQuest />} />
+  <Route path="/paaralanquest" element={<PaaralanQuest />} />
+  <Route path="/teacher-interface" element={<TeacherInterface />} />
+
+  {/* ✅ Add these two new lines below 👇 */}
+  <Route path="/paaralanquest-individual" element={<PaaralanQuest />} />
+  <Route path="/paaralanquest-group" element={<PaaralanQuestGroup />} />
+</Routes>
+
   );
 };
 
