@@ -6,6 +6,8 @@ import GuessTheWordImage from './images/Homepage/Guess The Word .png';
 import ParkeQuestImage from './images/Homepage/Parke Quest (2).png';
 import PaaralanQuestImage from './images/Homepage/Paaralan Quest Icon.png';
 import MemoryGameImage from './images/Homepage/Memory Game Icon.png';
+import PaaralanQuest from './PaaralanQuest';
+import PaaralanQuestGroup from './PaaralanQuestGroup';
 
 const Homepage = () => {
   const navigate = useNavigate();
@@ -13,7 +15,7 @@ const Homepage = () => {
   const games = [
     { color: '#F3668A', image: GuessTheWordImage, route: '/guesstheword' },
     { color: '#4092AD', image: ParkeQuestImage, route: '/parkequest' },
-    { color: '#06D7A0', image: PaaralanQuestImage, route: '/paaralanquest' },
+    { color: '#06D7A0', image: PaaralanQuestImage, route: '/paaralanquest', isPaaralanQuest: true },
     { color: '#FAB869', image: MemoryGameImage, route: '/memorygame' },
   ];
 
@@ -186,7 +188,23 @@ const Homepage = () => {
           {games.map((game, index) => (
             <div
               key={index}
-              onClick={() => navigate(game.route)}
+              onClick={() => {
+                if (game.isPaaralanQuest) {
+                  const name = prompt("Enter your name:");
+                  if (!name) return;
+
+                  const mode = prompt("Choose game type: 'individual' or 'group'").toLowerCase();
+                  if (mode === 'individual') {
+                    navigate('/paaralanquest-individual', { state: { playerName: name } });
+                  } else if (mode === 'group') {
+                    navigate('/paaralanquest-group', { state: { playerName: name } });
+                  } else {
+                    alert("Invalid choice. Type 'individual' or 'group'.");
+                  }
+                } else {
+                  navigate(game.route);
+                }
+              }}
               style={{
                 backgroundColor: game.color,
                 borderRadius: '20px',
