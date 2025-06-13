@@ -66,29 +66,33 @@ const ParkeQuest = () => {
   };
 
   const checkAnswer = async () => {
-    const current = questions[currentIndex];
-    const studentAnswer = selectedOrder.join(" ");
-    try {
-      const res = await axios.post("http://localhost:8080/api/parkequest/check", {
-        questionId: current.id,
-        selectedAnswer: studentAnswer,
-        usedHint,
-      });
+  const current = questions[currentIndex];
+  const studentAnswer = selectedOrder.join(" ");
 
-      setResultMessage(res.data.message);
+  try {
+    const res = await axios.post("http://localhost:8080/api/parkequest/check", {
+      questionId: current.id,
+      selectedAnswer: studentAnswer,
+      usedHint,
+    });
 
-      if (!answeredIndices.includes(currentIndex)) {
-        const newScore = score + res.data.score;
-        const newAnswered = [...answeredIndices, currentIndex];
-        setScore(newScore);
-        setAnsweredIndices(newAnswered);
-        localStorage.setItem("pq_score", newScore.toString());
-        localStorage.setItem("pq_answered", JSON.stringify(newAnswered));
-      }
-    } catch (err) {
-      console.error("Check answer failed:", err);
+    setResultMessage(res.data.message);
+
+    // Only add score if question hasn't been answered before
+    if (!answeredIndices.includes(currentIndex)) {
+      const newScore = score + res.data.score;
+      const newAnswered = [...answeredIndices, currentIndex];
+
+      setScore(newScore);
+      setAnsweredIndices(newAnswered);
+
+      localStorage.setItem("pq_score", newScore.toString());
+      localStorage.setItem("pq_answered", JSON.stringify(newAnswered));
     }
-  };
+  } catch (err) {
+    console.error("Check answer failed:", err);
+  }
+};
 
   const goToNext = async () => {
     if (currentIndex === questions.length - 1) {
@@ -236,15 +240,8 @@ const ParkeQuest = () => {
 
           {/* Question Progress */}
           <div className="relative w-[280px] min-h-[230px] bg-[#8B4A32] rounded-[24px] shadow-lg">
-            <div
-              className={`absolute top-4 left-3 grid ${
-                questions.length <= 5
-                  ? "grid-cols-5"
-                  : questions.length <= 10
-                  ? "grid-cols-5"
-                  : "grid-cols-6"
-              } gap-x-3 gap-y-3`}
-            >
+           <div className="absolute top-4 left-3 grid grid-cols-4 gap-x-3 gap-y-3 w-full pr-4">
+
               {questions.map((_, num) => (
                 <div
                   key={num + 1}
@@ -277,7 +274,7 @@ const ParkeQuest = () => {
 
           {/* Score */}
           <div className="text-white text-lg font-bold text-center mt-2">
-            Score: <span className="text-green-300">{score}</span> / {questions.length * 2}
+            Score: <span className="text-green-300">{score}</span> / {questions.length}
           </div>
 
           {/* Result */}
@@ -292,7 +289,7 @@ const ParkeQuest = () => {
             <div className="text-white mt-6 font-bold text-center text-xl">
               🎉 SESSION FINISHED!
               <br />
-              Your final score: <span className="text-green-300">{score} / {questions.length * 2}</span>
+              Your final score: <span className="text-green-300">{score} / {questions.length}</span>
             </div>
           )}
         </div>
