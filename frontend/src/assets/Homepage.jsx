@@ -9,8 +9,11 @@ import MemoryGameImage from './images/Homepage/Memory Game Icon.png';
 import PaaralanQuest from './PaaralanQuest';
 import PaaralanQuestGroup from './PaaralanQuestGroup';
 
-const Homepage = () => {
+  const Homepage = () => {
   const navigate = useNavigate();
+  const [showPQForm, setShowPQForm] = React.useState(false);
+  const [playerName, setPlayerName] = React.useState("");
+
 
   const games = [
     { color: '#F3668A', image: GuessTheWordImage, route: '/guesstheword' },
@@ -188,23 +191,14 @@ const Homepage = () => {
           {games.map((game, index) => (
             <div
               key={index}
-              onClick={() => {
-                if (game.isPaaralanQuest) {
-                  const name = prompt("Enter your name:");
-                  if (!name) return;
-
-                  const mode = prompt("Choose game type: 'individual' or 'group'").toLowerCase();
-                  if (mode === 'individual') {
-                    navigate('/paaralanquest-individual', { state: { playerName: name } });
-                  } else if (mode === 'group') {
-                    navigate('/paaralanquest-group', { state: { playerName: name } });
+                              onClick={() => {
+                  if (game.isPaaralanQuest) {
+                    setShowPQForm(true);
                   } else {
-                    alert("Invalid choice. Type 'individual' or 'group'.");
+                    navigate(game.route);
                   }
-                } else {
-                  navigate(game.route);
-                }
-              }}
+                }}
+
               style={{
                 backgroundColor: game.color,
                 borderRadius: '20px',
@@ -223,9 +217,99 @@ const Homepage = () => {
                 style={{ width: '100%', maxWidth: '200px', borderRadius: '10px' }}
               />
             </div>
-          ))}
+          ))
+          
+          
+          
+          }
         </div>
       </div>
+            {showPQForm && (
+  <div style={{
+    position: 'fixed',
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000
+  }}>
+    <div style={{
+      background: 'white',
+      padding: '30px',
+      borderRadius: '15px',
+      width: '300px',
+      textAlign: 'center',
+      fontFamily: "'Fredoka', sans-serif"
+    }}>
+      <h3 style={{ marginBottom: '15px' }}>Enter your name:</h3>
+      <input
+        type="text"
+        value={playerName}
+        onChange={(e) => setPlayerName(e.target.value)}
+        placeholder="Your Name"
+        style={{
+          width: '100%',
+          padding: '10px',
+          marginBottom: '20px',
+          borderRadius: '8px',
+          border: '1px solid #ccc'
+        }}
+      />
+      <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+        <button
+          onClick={() => {
+            if (!playerName.trim()) {
+              alert("Please enter your name");
+              return;
+            }
+            navigate('/paaralanquest-individual', { state: { playerName } });
+          }}
+          style={{
+            padding: '10px 15px',
+            backgroundColor: '#06D7A0',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer'
+          }}
+        >
+          Individual
+        </button>
+        <button
+          onClick={() => {
+            if (!playerName.trim()) {
+              alert("Please enter your name");
+              return;
+            }
+            navigate('/paaralanquest-group', { state: { playerName } });
+          }}
+          style={{
+            padding: '10px 15px',
+            backgroundColor: '#FAB869',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer'
+          }}
+        >
+          Group
+        </button>
+      </div>
+      <button
+        onClick={() => setShowPQForm(false)}
+        style={{
+          marginTop: '15px',
+          background: 'none',
+          border: 'none',
+          color: '#999',
+          textDecoration: 'underline',
+          cursor: 'pointer'
+        }}
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
+)}
 
       {/* Join Us Section */}
       <div id="join" style={{ padding: '40px', backgroundColor: '#ffffff', textAlign: 'center' }}>
