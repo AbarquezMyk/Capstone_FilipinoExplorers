@@ -328,12 +328,14 @@ const storyData = [
 const PaaralanQuestGroup = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [votes, setVotes] = useState(Array(players.length).fill(null));
-  const [score, setScore] = useState(0);
+  const [scores, setScores] = useState([0, 0, 0]); // Player 1, 2, 3
   const [submitted, setSubmitted] = useState(false);
   const current = storyData[currentIndex];
   const location = useLocation();
-const playerName = location.state?.playerName || "Player";
+  const playerName = location.state?.playerName || "Player";
   const handleVote = (playerIndex, choiceIndex) => {
+  
+    
     if (submitted) return; // Lock voting after submit
     const updatedVotes = [...votes];
     updatedVotes[playerIndex] = choiceIndex;
@@ -355,12 +357,21 @@ const playerName = location.state?.playerName || "Player";
   };
 
   const handleSubmit = () => {
-    const mostVoted = getMostVotedIndex();
-    if (mostVoted === current.correctAnswer) {
-      setScore(score + 1);
+  if (submitted) return; // prevent double submission
+
+  const newScores = [...scores];
+  votes.forEach((vote, i) => {
+    if (vote === storyData[currentIndex].correctAnswer) {
+
+      newScores[i] += 1; // award +1 to player i
     }
-    setSubmitted(true);
-  };
+  });
+
+  setScores(newScores);
+  setSubmitted(true); // lock in the votes
+};
+
+
 
   const handleNext = () => {
     if (currentIndex < storyData.length - 1) {
@@ -440,10 +451,23 @@ const playerName = location.state?.playerName || "Player";
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: 600 }}>
-          <div style={{ backgroundColor: '#f5e5c0', border: '4px solid #8B4513', borderRadius: 10, padding: 20 }}>
-            Score: {score}
-          </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: 600 }}>
+                            <div style={{
+              backgroundColor: '#f5e5c0',
+              border: '4px solid #8B4513',
+              borderRadius: 10,
+              padding: 20,
+              textAlign: 'left'
+            }}>
+              <h3>📊 Player Scores</h3>
+              {players.map((player, i) => (
+                <div key={i}>
+                  {player}: <strong>{scores[i]}</strong>
+                </div>
+              ))}
+            </div>
+
+
 
           <div style={{
             backgroundColor: '#8B4513', borderRadius: 10, padding: 20, color: '#fff',
