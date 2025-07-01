@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
@@ -12,6 +12,10 @@ import ButtonNext from "../assets/images/Buttons and Other/button next.png";
 import ButtonPrev from "../assets/images/Buttons and Other/button prev.png";
 import TimerLog from "../assets/images/Buttons and Other/Timer Log.png";
 
+
+
+
+
 const ParkeQuest = () => {
   const navigate = useNavigate();
   const [questions, setQuestions] = useState([]);
@@ -20,7 +24,6 @@ const ParkeQuest = () => {
   );
   const [orderedChoices, setOrderedChoices] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState([]);
-  const [progress] = useState(60);
   const [usedHint, setUsedHint] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [resultMessage, setResultMessage] = useState("");
@@ -31,7 +34,102 @@ const ParkeQuest = () => {
     const saved = localStorage.getItem("pq_answered");
     return saved ? JSON.parse(saved) : [];
   });
+  const submitGame = async () => {
+  try {
+    await axios.post("http://localhost:8080/api/parkequest/score", {
+      totalScore: score,
+    });
+    setFinalScore(score);
+    localStorage.removeItem("pq_score");
+    localStorage.removeItem("pq_answered");
+    localStorage.removeItem("pq_index");
+    setScore(0);
+    setAnsweredIndices([]);
+    setResultMessage("");
 
+    setTimeout(() => {
+      navigate("/#games");
+    }, 4000);
+  } catch (err) {
+    console.error("❌ Failed to submit game manually:", err);
+  }
+};
+
+
+  const intervalRef = useRef(null);
+  const [totalSeconds, setTotalSeconds] = useState(null); // ⏱️ fetched from backend
+  const [secondsLeft, setSecondsLeft] = useState(null);
+  const [finalScore, setFinalScore] = useState(null);
+
+  useEffect(() => {
+  axios.get("http://localhost:8080/api/parkequest/timer").then((res) => {
+    const seconds = res.data;
+    setTotalSeconds(seconds);
+    setSecondsLeft(seconds);
+  });
+}, []);
+
+   
+  useEffect(() => {
+  // Reset session if this is a new game load (first question and full time)
+      if (
+      currentIndex === 0 &&
+      secondsLeft !== null &&
+      localStorage.getItem("pq_score")
+    ) {
+   localStorage.removeItem("pq_score");
+    localStorage.removeItem("pq_answered");
+    localStorage.removeItem("pq_index");
+    setScore(0);
+    setAnsweredIndices([]);
+  }
+}, [secondsLeft]);
+
+      useEffect(() => {
+      if (secondsLeft === null) return;
+      intervalRef.current = setInterval(() => {
+        setSecondsLeft((prev) => {
+          if (prev <= 1) {
+            clearInterval(intervalRef.current);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(intervalRef.current);
+    }, [secondsLeft]);
+
+
+      // 🔁 Auto-redirect 4 seconds after time is up
+        useEffect(() => {
+      if (secondsLeft === 0) {
+        (async () => {
+          try {
+            await axios.post("http://localhost:8080/api/parkequest/score", {
+              totalScore: score,
+            });
+          } catch (err) {
+            console.error("Failed to save score at timeout:", err);
+          }
+        })();
+
+        setFinalScore(score);
+        localStorage.removeItem("pq_score");
+        localStorage.removeItem("pq_answered");
+        localStorage.removeItem("pq_index");
+        setScore(0);
+        setAnsweredIndices([]);
+        setResultMessage("");
+
+        setTimeout(() => {
+          navigate("/#games");
+        }, 4000);
+      }
+    }, [secondsLeft, navigate]);
+
+
+
+  // ⏬ Fetch questions once
   useEffect(() => {
     axios
       .get("http://localhost:8080/api/parkequest")
@@ -49,12 +147,15 @@ const ParkeQuest = () => {
   }, []);
 
   useEffect(() => {
-    if (questions.length > 0) {
-      const choices = questions[currentIndex].choices.map((c) => c.choice);
-      setOrderedChoices(choices);
-      setSelectedOrder(choices);
-    }
-  }, [questions, currentIndex]);
+  if (questions.length > 0 && questions[currentIndex]) {
+    const choices = questions[currentIndex].choices.map((c) => c.choice);
+    setOrderedChoices(choices);
+    setSelectedOrder(choices);
+    setResultMessage("");
+    setShowHint(false);
+    setUsedHint(false);
+  }
+}, [questions, currentIndex]);
 
   const handleDragEnd = (result) => {
     if (!result.destination) return;
@@ -66,35 +167,33 @@ const ParkeQuest = () => {
   };
 
   const checkAnswer = async () => {
-  const current = questions[currentIndex];
-  const studentAnswer = selectedOrder.join(" ");
+     if (secondsLeft === 0) return; // ⛔ Prevent checking if time is up
+    const current = questions[currentIndex];
+    const studentAnswer = selectedOrder.join(" ");
+    try {
+      const res = await axios.post("http://localhost:8080/api/parkequest/check", {
+        questionId: current.id,
+        selectedAnswer: studentAnswer,
+        usedHint,
+      });
 
-  try {
-    const res = await axios.post("http://localhost:8080/api/parkequest/check", {
-      questionId: current.id,
-      selectedAnswer: studentAnswer,
-      usedHint,
-    });
+      setResultMessage(res.data.message);
 
-    setResultMessage(res.data.message);
-
-    // Only add score if question hasn't been answered before
-    if (!answeredIndices.includes(currentIndex)) {
-      const newScore = score + res.data.score;
-      const newAnswered = [...answeredIndices, currentIndex];
-
-      setScore(newScore);
-      setAnsweredIndices(newAnswered);
-
-      localStorage.setItem("pq_score", newScore.toString());
-      localStorage.setItem("pq_answered", JSON.stringify(newAnswered));
+      if (!answeredIndices.includes(currentIndex)) {
+        const newScore = score + res.data.score;
+        const newAnswered = [...answeredIndices, currentIndex];
+        setScore(newScore);
+        setAnsweredIndices(newAnswered);
+        localStorage.setItem("pq_score", newScore.toString());
+        localStorage.setItem("pq_answered", JSON.stringify(newAnswered));
+      }
+    } catch (err) {
+      console.error("Check answer failed:", err);
     }
-  } catch (err) {
-    console.error("Check answer failed:", err);
-  }
-};
+  };
 
   const goToNext = async () => {
+    if (secondsLeft === 0) return; // ⛔ Prevent navigation if time is up
     if (currentIndex === questions.length - 1) {
       try {
         await axios.post("http://localhost:8080/api/parkequest/score", {
@@ -111,21 +210,18 @@ const ParkeQuest = () => {
       setCurrentIndex(newIndex);
       localStorage.setItem("pq_index", newIndex.toString());
     }
-
-    setUsedHint(false);
-    setShowHint(false);
-    setResultMessage("");
   };
 
   const goToPrevious = () => {
     const newIndex = Math.max(currentIndex - 1, 0);
     setCurrentIndex(newIndex);
     localStorage.setItem("pq_index", newIndex.toString());
-
-    setUsedHint(false);
-    setShowHint(false);
-    setResultMessage("");
   };
+
+  const progress =
+  totalSeconds && secondsLeft !== null
+    ? (secondsLeft / totalSeconds) * 100
+    : 100;
 
   const current = questions[currentIndex];
 
@@ -145,12 +241,10 @@ const ParkeQuest = () => {
       className="flex flex-col min-h-screen bg-cover bg-center font-['Fredoka'] relative"
       style={{ backgroundImage: `url(${Background})` }}
     >
-      {/* Logo */}
       <div className="absolute top-4 left-4 z-10">
-        <img src={Logo} alt="Filipino Explorers Logo" className="w-40" />
+        <img src={Logo} alt="Logo" className="w-40" />
       </div>
 
-      {/* Title */}
       <div className="w-full text-center mt-6">
         <div className="inline-block bg-amber-100 border-4 border-amber-800 px-8 py-4 rounded-xl shadow-md">
           <h1 className="text-3xl font-bold text-amber-900">Hulaan ang Salita</h1>
@@ -159,12 +253,20 @@ const ParkeQuest = () => {
       </div>
 
       <div className="flex flex-1 justify-center items-center gap-10 px-6 py-12">
-        {/* Timer */}
-        <div className="relative w-[140px] h-[450px] flex items-center justify-center">
-          <img src={TimerLog} alt="Timer Stick" className="absolute inset-0 w-full h-full object-contain z-10" />
+        {/* Timer Stick */}
+        <div className="relative w-[140px] h-[300px] flex items-center justify-center">
+          <img
+            src={TimerLog}
+            alt="Timer Stick"
+            className="absolute w-[160px] h-[400px] object-contain z-10"
+          />
           <div
-            className="absolute bottom-[100px] w-[30px] bg-emerald-400 z-20 transition-all duration-500"
-            style={{ height: `${progress}%`, borderRadius: "9999px" }}
+            className="absolute bottom-[20px] w-[20px] bg-emerald-400 z-20 transition-all duration-1000 ease-linear rounded-full"
+            style={{
+              height: `${progress}%`,
+              left: "50%",
+              transform: "translateX(-50%)",
+            }}
           ></div>
         </div>
 
@@ -177,13 +279,9 @@ const ParkeQuest = () => {
             <DragDropContext onDragEnd={handleDragEnd}>
               <Droppable droppableId="fragments">
                 {(provided) => (
-                  <div
-                    {...provided.droppableProps}
-                    ref={provided.innerRef}
-                    className="flex flex-col items-center gap-3 mt-2"
-                  >
+                  <div {...provided.droppableProps} ref={provided.innerRef} className="flex flex-col items-center gap-3 mt-2">
                     {orderedChoices.map((frag, idx) => (
-                      <Draggable key={`${frag}-${idx}`} draggableId={`${frag}-${idx}`} index={idx}>
+                      <Draggable key={`frag-${idx}`} draggableId={`frag-${idx}`} index={idx}>
                         {(provided) => (
                           <div
                             ref={provided.innerRef}
@@ -210,7 +308,6 @@ const ParkeQuest = () => {
             </DragDropContext>
           </div>
 
-          {/* Navigation */}
           <div className="flex items-center justify-between w-full px-8 mt-2">
             <button onClick={goToPrevious} className="w-[185px] h-[85px]">
               <img src={ButtonPrev} alt="Previous" className="w-full h-full object-contain" />
@@ -229,7 +326,6 @@ const ParkeQuest = () => {
 
         {/* Right Panel */}
         <div className="flex flex-col items-center gap-5">
-          {/* Hint Box */}
           <div className="relative w-[325px] h-[70px]">
             <div className="absolute -top-[100px] left-1/2 transform -translate-x-1/2 bg-[#4e2c1c] rounded-[24px] w-full h-[80px] flex items-center justify-center shadow-md">
               <div className="bg-[#fde68a] h-[60px] w-[280px] rounded-[20px] px-4 py-2 shadow-inner text-center flex items-center justify-center font-bold text-lg text-[#4e2c1c]">
@@ -238,10 +334,8 @@ const ParkeQuest = () => {
             </div>
           </div>
 
-          {/* Question Progress */}
           <div className="relative w-[280px] min-h-[230px] bg-[#8B4A32] rounded-[24px] shadow-lg">
-           <div className="absolute top-4 left-3 grid grid-cols-4 gap-x-3 gap-y-3 w-full pr-4">
-
+            <div className="absolute top-4 left-3 grid grid-cols-4 gap-x-3 gap-y-3 w-full pr-4">
               {questions.map((_, num) => (
                 <div
                   key={num + 1}
@@ -255,7 +349,6 @@ const ParkeQuest = () => {
             </div>
           </div>
 
-          {/* Hint + Submit */}
           <button
             onClick={() => {
               setUsedHint(true);
@@ -266,34 +359,40 @@ const ParkeQuest = () => {
             HINT
           </button>
           <button
-            onClick={checkAnswer}
+            onClick={submitGame}
             className="w-[250px] py-3 rounded-full bg-[#ffca28] hover:bg-yellow-500 text-white font-bold text-lg shadow-md"
           >
             SUBMIT
           </button>
 
-          {/* Score */}
+
           <div className="text-white text-lg font-bold text-center mt-2">
             Score: <span className="text-green-300">{score}</span> / {questions.length}
           </div>
 
-          {/* Result */}
           {resultMessage && (
             <div className="text-white text-lg font-bold text-center mt-4">
               {resultMessage === "CORRECT ANSWER" ? "✅ Tama!" : "❌ Mali. Subukan muli."}
             </div>
           )}
 
-          {/* Completion Message */}
           {currentIndex === questions.length - 1 && (
             <div className="text-white mt-6 font-bold text-center text-xl">
-              🎉 SESSION FINISHED!
-              <br />
+              🎉 SESSION FINISHED!<br />
               Your final score: <span className="text-green-300">{score} / {questions.length}</span>
             </div>
           )}
         </div>
       </div>
+      {/* Timer popup when time is up */}
+{secondsLeft === 0 && (
+  <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+    <div className="bg-white text-[#4e2c1c] p-8 rounded-xl shadow-lg text-center max-w-md font-bold text-xl">
+      Your final score: {finalScore ?? score} / {questions.length}
+    </div>
+  </div>
+)}
+
     </div>
   );
 };

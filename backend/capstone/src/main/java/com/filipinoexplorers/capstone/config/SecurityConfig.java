@@ -24,12 +24,13 @@ public class SecurityConfig {
         http.csrf().disable()
             .authorizeHttpRequests()
             .requestMatchers(
-                "/api/teachers/login",
-                "/api/students/login",
-                "/api/teachers/create",
-                "/api/students/create",
-                "/api/parkequest/**",  // ✅ Allow all ParkeQuest endpoints
-                "/api/parkequest/check"
+            "/api/teachers/login",
+            "/api/students/login",
+            "/api/teachers/create",
+            "/api/students/create",
+            "/api/parkequest",         // ✅ exact path for GET /api/parkequest
+            "/api/parkequest/**",      // ✅ subpaths like /api/parkequest/check, /submit-score
+            "/api/parkequest/check"
             ).permitAll()
             .anyRequest().authenticated()
             .and()

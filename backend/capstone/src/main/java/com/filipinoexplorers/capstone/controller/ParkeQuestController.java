@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 public class ParkeQuestController {
     private final ParkeQuestService service;
     
+    
     @Autowired
     private ParkeQuestQuestionRepository parkeQuestQuestionRepository;
 
@@ -51,7 +52,9 @@ public class ParkeQuestController {
         question.setStory(dto.getStory());
         question.setQuestion(dto.getQuestion());
         question.setCorrectAnswer(dto.getCorrectAnswer());
-        question.setHint(dto.getHint()); 
+        question.setHint(dto.getHint());
+        question.setTimeLimit(dto.getTimeLimit());
+ 
 
         List<ParkeQuestChoice> choiceList = dto.getChoices().stream().map(choiceText -> {
         ParkeQuestChoice choice = new ParkeQuestChoice();
@@ -104,6 +107,8 @@ public class ParkeQuestController {
         question.setQuestion(dto.getQuestion());
         question.setCorrectAnswer(dto.getCorrectAnswer());
         question.setHint(dto.getHint());
+        question.setTimeLimit(dto.getTimeLimit());
+
 
         
         question.getChoices().clear(); 
@@ -124,6 +129,24 @@ public class ParkeQuestController {
         parkeQuestScoreRepository.save(score);
         return ResponseEntity.ok("Score saved.");
     }
+
+
+
+    @GetMapping("/timer")
+    public ResponseEntity<Integer> getGlobalTimer() {
+        return ResponseEntity.ok(service.getGlobalTimer()); // ✅ use service
+    }
+
+    @PostMapping("/timer")
+    public ResponseEntity<String> updateGlobalTimer(@RequestParam int seconds) {
+        if (seconds < 10 || seconds > 3600) {
+            return ResponseEntity.badRequest().body("Timer must be between 10 and 3600 seconds.");
+        }
+        service.setGlobalTimer(seconds); // ✅ use service
+        return ResponseEntity.ok("⏱️ Timer updated to " + seconds + " seconds.");
+    }
+
+
 
 
 }

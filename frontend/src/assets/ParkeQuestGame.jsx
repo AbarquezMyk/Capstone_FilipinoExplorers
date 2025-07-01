@@ -9,13 +9,17 @@ const ParkeQuestGame = () => {
   const [fullSentence, setFullSentence] = useState("");
   const [fragments, setFragments] = useState(["", "", ""]);
   const [hint, setHint] = useState("");
+  const [timeLimit, setTimeLimit] = useState(30); // ⏱ new state
   const [message, setMessage] = useState("");
   const [questionNumber, setQuestionNumber] = useState(1);
   const [allQuestions, setAllQuestions] = useState([]);
   const [editingId, setEditingId] = useState(null);
+  const [globalTimer, setGlobalTimer] = useState(5); // 🌍 Global game timer in minutes
+
 
   useEffect(() => {
     fetchAllQuestions();
+    fetchGlobalTimer();
   }, []);
 
   const fetchAllQuestions = async () => {
@@ -27,6 +31,16 @@ const ParkeQuestGame = () => {
       console.error("Error fetching questions:", error);
     }
   };
+
+  const fetchGlobalTimer = async () => {
+  try {
+    const res = await axios.get("http://localhost:8080/api/parkequest/timer");
+    setGlobalTimer(Math.ceil(res.data / 60)); // convert from seconds to minutes
+  } catch (error) {
+    console.error("Failed to fetch global timer:", error);
+  }
+};
+
 
   const handleSplitSentence = () => {
     const words = fullSentence.trim().split(" ");
@@ -50,6 +64,7 @@ const ParkeQuestGame = () => {
     setQuestion(q.question);
     setFullSentence(q.correctAnswer);
     setHint(q.hint);
+    setTimeLimit(q.timeLimit || 30); // pre-fill timer
     setFragments(q.choices.map(c => c.choice));
     setMessage("✏️ Editing Question #" + q.id);
   };
@@ -74,8 +89,8 @@ const ParkeQuestGame = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!story || !question || !fullSentence || fragments.includes("") || !hint) {
-      setMessage("❌ Please fill out all fields.");
+    if (!story || !question || !fullSentence || fragments.includes("") || !hint || timeLimit <= 0) {
+      setMessage("❌ Please fill out all fields, including a valid timer.");
       return;
     }
 
@@ -85,6 +100,7 @@ const ParkeQuestGame = () => {
       correctAnswer: fullSentence,
       choices: fragments,
       hint,
+      timeLimit: timeLimit * 60, // ✅ Convert minutes to seconds
     };
 
     try {
@@ -111,12 +127,31 @@ const ParkeQuestGame = () => {
       setFullSentence("");
       setFragments(["", "", ""]);
       setHint("");
+      setTimeLimit(Math.ceil((q.timeLimit || 30) / 60)); // ✅ converts seconds to minutes
       fetchAllQuestions();
     } catch (error) {
       console.error("Submit error:", error);
       setMessage("❌ Failed to submit. Try again.");
     }
   };
+
+  const handleUpdateGlobalTimer = async () => {
+  if (globalTimer < 1 || globalTimer > 60) {
+    setMessage("⏰ Please set a timer between 1 and 60 minutes.");
+    return;
+  }
+
+  try {
+    await axios.post(`http://localhost:8080/api/parkequest/timer?seconds=${globalTimer * 60}`);
+
+
+    setMessage(`✅ Global timer set to ${globalTimer} minute(s)!`);
+  } catch (error) {
+    console.error("Failed to update global timer:", error);
+    setMessage("❌ Failed to update global timer.");
+  }
+};
+
 
   return (
     <div
@@ -131,6 +166,29 @@ const ParkeQuestGame = () => {
         <div className="flex justify-center mb-6">
           <img src={Logo} alt="Logo" className="w-40" />
         </div>
+
+
+        <div className="mb-8">
+        <label className="block font-bold mb-2 text-[#073B4C]">🌍 Set Global Game Timer (minutes)</label>
+        <div className="flex gap-2">
+          <input
+            type="number"
+            className="w-full p-2 border rounded"
+            min={1}
+            max={60}
+            value={globalTimer}
+            onChange={(e) => setGlobalTimer(parseInt(e.target.value))}
+          />
+          <button
+            onClick={handleUpdateGlobalTimer}
+            type="button"
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+          >
+            Update Timer
+          </button>
+        </div>
+      </div>
+
 
         <form onSubmit={handleSubmit}>
           <h2 className="text-2xl font-bold mb-4 text-center text-[#073B4C]">
@@ -188,6 +246,17 @@ const ParkeQuestGame = () => {
             onChange={(e) => setHint(e.target.value)}
           />
 
+          <label className="block font-semibold mt-4">Time Limit (in minutes)</label>
+          <input
+            className="w-full p-2 border rounded mb-4"
+            type="number"
+            min={1}
+            max={60}
+            value={timeLimit}
+            onChange={(e) => setTimeLimit(parseInt(e.target.value))}
+          />
+
+
           <button
             type="submit"
             className="w-full bg-[#06D6A0] text-white font-bold py-2 px-4 rounded-lg hover:bg-[#05c594] transition-all"
@@ -210,6 +279,7 @@ const ParkeQuestGame = () => {
               <p className="text-sm">Answer: <span className="text-green-700">{q.correctAnswer}</span></p>
               <p className="text-sm">Hint: {q.hint}</p>
               <p className="text-sm">Choices: {q.choices.map(c => c.choice).join(", ")}</p>
+              <p className="text-sm">⏱ Time Limit: {Math.ceil(q.timeLimit / 60)} minute(s)</p>
               <div className="flex gap-2 mt-2">
                 <button onClick={() => handleEdit(q)} className="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-1 rounded">Edit</button>
                 <button onClick={() => handleDelete(q.id)} className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded">Delete</button>

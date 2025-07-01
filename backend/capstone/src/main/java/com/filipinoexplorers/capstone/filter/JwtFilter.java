@@ -29,10 +29,13 @@ protected void doFilterInternal(HttpServletRequest request,
                                 FilterChain filterChain)
         throws ServletException, IOException {
 
-    String path = request.getRequestURI(); // Accurate path detection
+    String path = request.getRequestURI().toLowerCase(); // force lowercase
+    String method = request.getMethod();
 
-    // ✅ Allow all ParkeQuest-related endpoints (GET, POST, PUT, DELETE) or preflight
-    if (path.startsWith("/api/parkequest") || request.getMethod().equalsIgnoreCase("OPTIONS")) {
+    System.out.println("🔍 JwtFilter intercepting: " + method + " " + path);
+
+    if (path.startsWith("/api/parkequest") || method.equalsIgnoreCase("OPTIONS")) {
+        System.out.println("✅ Skipping JWT for ParkeQuest public access");
         filterChain.doFilter(request, response);
         return;
     }
