@@ -23,6 +23,7 @@ const ParkeQuest = () => {
   const [currentIndex, setCurrentIndex] = useState(() =>
     parseInt(localStorage.getItem("pq_index")) || 0
   );
+  const [playerName, setPlayerName] = useState(() => localStorage.getItem("pq_playerName") || "");
   const [orderedChoices, setOrderedChoices] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState([]);
   const [usedHint, setUsedHint] = useState(false);
@@ -39,26 +40,26 @@ const ParkeQuest = () => {
   const submitGame = async () => {
   try {
     await axios.post("http://localhost:8080/api/parkequest/submit-score", {
-      totalScore: score,
+      score: score,
+      studentName: playerName || "Anonymous"
     });
 
-    localStorage.removeItem("pq_score");
-    localStorage.removeItem("pq_answered");
-    localStorage.removeItem("pq_index");
+    setFinalScore(score); // ✅ Show score first
 
-    setFinalScore(score);
-    setScore(0);
-    setAnsweredIndices([]);
-    setResultMessage("");
-
-    // ✅ Add redirect after short delay
     setTimeout(() => {
-      navigate("/#games"); // or window.location.href = "/#games";
+      setScore(0);
+      setAnsweredIndices([]);
+      setResultMessage("");
+      localStorage.removeItem("pq_score");
+      localStorage.removeItem("pq_answered");
+      localStorage.removeItem("pq_index");
+      navigate("/#games");
     }, 3000);
   } catch (err) {
     console.error("❌ Failed to submit game manually:", err);
   }
 };
+
 
   const intervalRef = useRef(null);
   const [totalSeconds, setTotalSeconds] = useState(null); // ⏱️ fetched from backend
@@ -79,16 +80,17 @@ const ParkeQuest = () => {
     !hasInitializedRef.current &&
     currentIndex === 0 &&
     secondsLeft !== null &&
-    localStorage.getItem("pq_score")
+    !localStorage.getItem("pq_score")
   ) {
+    setScore(0);
+    setAnsweredIndices([]);
     localStorage.removeItem("pq_score");
     localStorage.removeItem("pq_answered");
     localStorage.removeItem("pq_index");
-    setScore(0);
-    setAnsweredIndices([]);
-    hasInitializedRef.current = true; // ✅ Prevent future resets
+    hasInitializedRef.current = true;
   }
 }, [secondsLeft, currentIndex]);
+
 
       useEffect(() => {
         if (totalSeconds === null) return;
@@ -108,32 +110,31 @@ const ParkeQuest = () => {
 
       // 🔁 Auto-redirect 4 seconds after time is up
         useEffect(() => {
-      if (secondsLeft === 0) {
-        (async () => {
-          try {
-            await axios.post("http://localhost:8080/api/parkequest/submit-score", {
-              totalScore: score,
-            });
-          } catch (err) {
-            console.error("Failed to save score at timeout:", err);
-          }
-        })();
-
-        setFinalScore(score);
-        localStorage.removeItem("pq_score");
-        localStorage.removeItem("pq_answered");
-        localStorage.removeItem("pq_index");
-        setScore(0);
-        setAnsweredIndices([]);
-        setResultMessage("");
-
-        setTimeout(() => {
-          navigate("/#games");
-        }, 4000);
+  if (secondsLeft === 0) {
+    (async () => {
+      try {
+        await axios.post("http://localhost:8080/api/parkequest/submit-score", {
+          score: score,
+          studentName: playerName || "Anonymous"
+        });
+      } catch (err) {
+        console.error("Failed to save score at timeout:", err);
       }
-    }, [secondsLeft, navigate]);
 
+      setFinalScore(score);
+      localStorage.removeItem("pq_score");
+      localStorage.removeItem("pq_answered");
+      localStorage.removeItem("pq_index");
+      setScore(0);
+      setAnsweredIndices([]);
+      setResultMessage("");
 
+      setTimeout(() => {
+        navigate("/#games");
+      }, 4000);
+    })();
+  }
+}, [secondsLeft, navigate]);
 
   // ⏬ Fetch questions once
   useEffect(() => {
@@ -172,8 +173,10 @@ const ParkeQuest = () => {
     setSelectedOrder(updated);
   };
 
+  
   const checkAnswer = async () => {
      if (secondsLeft === 0) return; // ⛔ Prevent checking if time is up
+     if (answeredIndices.includes(currentIndex)) return;
     const current = questions[currentIndex];
     const studentAnswer = selectedOrder.join(" ");
     try {
@@ -203,7 +206,8 @@ const ParkeQuest = () => {
     if (currentIndex === questions.length - 1) {
       try {
         await axios.post("http://localhost:8080/api/parkequest/submit-score", {
-          totalScore: score,
+          score: score,
+          studentName: playerName || "Anonymous"
         });
         localStorage.removeItem("pq_score");
         localStorage.removeItem("pq_answered");
@@ -217,6 +221,8 @@ const ParkeQuest = () => {
       localStorage.setItem("pq_index", newIndex.toString());
     }
   };
+
+  
 
   const goToPrevious = () => {
     const newIndex = Math.max(currentIndex - 1, 0);

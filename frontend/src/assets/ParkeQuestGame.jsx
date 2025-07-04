@@ -14,11 +14,22 @@ const ParkeQuestGame = () => {
   const [allQuestions, setAllQuestions] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [globalTimer, setGlobalTimer] = useState(5); // 🌍 Global game timer in minutes
+  const [scores, setScores] = useState([]);
+
+  const fetchScores = async () => {
+  try {
+    const res = await axios.get("http://localhost:8080/api/parkequest/scores");
+    setScores(res.data);
+  } catch (error) {
+    console.error("❌ Failed to fetch scores:", error);
+  }
+};
 
 
   useEffect(() => {
     fetchAllQuestions();
     fetchGlobalTimer();
+    fetchScores();
   }, []);
 
   const fetchAllQuestions = async () => {
@@ -273,6 +284,33 @@ const ParkeQuestGame = () => {
             </div>
           ))}
         </div>
+
+            <div className="mt-10">
+      <h3 className="text-lg font-bold mb-2 text-[#073B4C]">📊 Student Scores</h3>
+      {scores.length === 0 ? (
+        <p className="text-sm italic text-gray-500">No scores submitted yet.</p>
+      ) : (
+        <table className="w-full text-sm border mt-2 bg-white rounded shadow">
+          <thead className="bg-[#073B4C] text-white">
+            <tr>
+              <th className="p-2 text-left">Student Name</th>
+              <th className="p-2 text-left">Score</th>
+              <th className="p-2 text-left">Submitted At</th>
+            </tr>
+          </thead>
+          <tbody>
+            {scores.map((s, i) => (
+              <tr key={i} className="border-t">
+                <td className="p-2">{s.studentName || "Anonymous"}</td>
+                <td className="p-2">{s.score}</td>
+                <td className="p-2">{new Date(s.timestamp).toLocaleString()}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+
       </div>
     </div>
   );

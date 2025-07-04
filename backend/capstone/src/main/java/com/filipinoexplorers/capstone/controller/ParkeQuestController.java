@@ -125,10 +125,15 @@ public class ParkeQuestController {
     }
 
     @PostMapping("/submit-score")
-    public ResponseEntity<String> submitScore(@RequestBody ParkeQuestScore score) {
-        parkeQuestScoreRepository.save(score);
-        return ResponseEntity.ok("Score saved.");
-    }
+        public ResponseEntity<String> submitScore(@RequestBody ParkeQuestScore score) {
+            System.out.println("📥 Score received: " + score.getScore());
+            System.out.println("👤 Student: " + score.getStudentName());
+            System.out.println("🕒 Timestamp: " + score.getTimestamp());
+
+            parkeQuestScoreRepository.save(score);
+            return ResponseEntity.ok("Score saved.");
+        }
+
 
 
 
@@ -145,6 +150,13 @@ public class ParkeQuestController {
         service.setGlobalTimer(seconds); // ✅ use service
         return ResponseEntity.ok("⏱️ Timer updated to " + seconds + " seconds.");
     }
+
+
+    @GetMapping("/scores")
+        public ResponseEntity<List<ParkeQuestScore>> getAllScores() {
+            return ResponseEntity.ok(parkeQuestScoreRepository.findAll());
+        }
+
 
 
 
