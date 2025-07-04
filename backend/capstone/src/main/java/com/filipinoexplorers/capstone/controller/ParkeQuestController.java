@@ -53,7 +53,7 @@ public class ParkeQuestController {
         question.setQuestion(dto.getQuestion());
         question.setCorrectAnswer(dto.getCorrectAnswer());
         question.setHint(dto.getHint());
-        question.setTimeLimit(dto.getTimeLimit());
+        
  
 
         List<ParkeQuestChoice> choiceList = dto.getChoices().stream().map(choiceText -> {
@@ -107,7 +107,7 @@ public class ParkeQuestController {
         question.setQuestion(dto.getQuestion());
         question.setCorrectAnswer(dto.getCorrectAnswer());
         question.setHint(dto.getHint());
-        question.setTimeLimit(dto.getTimeLimit());
+        
 
 
         

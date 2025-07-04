@@ -9,7 +9,6 @@ const ParkeQuestGame = () => {
   const [fullSentence, setFullSentence] = useState("");
   const [fragments, setFragments] = useState(["", "", ""]);
   const [hint, setHint] = useState("");
-  const [timeLimit, setTimeLimit] = useState(30); // ⏱ new state
   const [message, setMessage] = useState("");
   const [questionNumber, setQuestionNumber] = useState(1);
   const [allQuestions, setAllQuestions] = useState([]);
@@ -64,7 +63,6 @@ const ParkeQuestGame = () => {
     setQuestion(q.question);
     setFullSentence(q.correctAnswer);
     setHint(q.hint);
-    setTimeLimit(q.timeLimit || 30); // pre-fill timer
     setFragments(q.choices.map(c => c.choice));
     setMessage("✏️ Editing Question #" + q.id);
   };
@@ -89,7 +87,7 @@ const ParkeQuestGame = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!story || !question || !fullSentence || fragments.includes("") || !hint || timeLimit <= 0) {
+    if (!story || !question || !fullSentence || fragments.includes("") || !hint) {
       setMessage("❌ Please fill out all fields, including a valid timer.");
       return;
     }
@@ -100,8 +98,7 @@ const ParkeQuestGame = () => {
       correctAnswer: fullSentence,
       choices: fragments,
       hint,
-      timeLimit: timeLimit * 60, // ✅ Convert minutes to seconds
-    };
+      };
 
     try {
       if (editingId) {
@@ -127,7 +124,6 @@ const ParkeQuestGame = () => {
       setFullSentence("");
       setFragments(["", "", ""]);
       setHint("");
-      setTimeLimit(Math.ceil((q.timeLimit || 30) / 60)); // ✅ converts seconds to minutes
       fetchAllQuestions();
     } catch (error) {
       console.error("Submit error:", error);
@@ -246,16 +242,7 @@ const ParkeQuestGame = () => {
             onChange={(e) => setHint(e.target.value)}
           />
 
-          <label className="block font-semibold mt-4">Time Limit (in minutes)</label>
-          <input
-            className="w-full p-2 border rounded mb-4"
-            type="number"
-            min={1}
-            max={60}
-            value={timeLimit}
-            onChange={(e) => setTimeLimit(parseInt(e.target.value))}
-          />
-
+          
 
           <button
             type="submit"
@@ -279,7 +266,6 @@ const ParkeQuestGame = () => {
               <p className="text-sm">Answer: <span className="text-green-700">{q.correctAnswer}</span></p>
               <p className="text-sm">Hint: {q.hint}</p>
               <p className="text-sm">Choices: {q.choices.map(c => c.choice).join(", ")}</p>
-              <p className="text-sm">⏱ Time Limit: {Math.ceil(q.timeLimit / 60)} minute(s)</p>
               <div className="flex gap-2 mt-2">
                 <button onClick={() => handleEdit(q)} className="bg-yellow-400 hover:bg-yellow-500 text-white px-4 py-1 rounded">Edit</button>
                 <button onClick={() => handleDelete(q.id)} className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded">Delete</button>

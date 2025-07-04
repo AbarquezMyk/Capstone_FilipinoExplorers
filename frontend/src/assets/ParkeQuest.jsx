@@ -17,6 +17,7 @@ import TimerLog from "../assets/images/Buttons and Other/Timer Log.png";
 
 
 const ParkeQuest = () => {
+  const hasInitializedRef = useRef(false);
   const navigate = useNavigate();
   const [questions, setQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(() =>
@@ -34,27 +35,30 @@ const ParkeQuest = () => {
     const saved = localStorage.getItem("pq_answered");
     return saved ? JSON.parse(saved) : [];
   });
+  
   const submitGame = async () => {
   try {
-    await axios.post("http://localhost:8080/api/parkequest/score", {
+    await axios.post("http://localhost:8080/api/parkequest/submit-score", {
       totalScore: score,
     });
-    setFinalScore(score);
+
     localStorage.removeItem("pq_score");
     localStorage.removeItem("pq_answered");
     localStorage.removeItem("pq_index");
+
+    setFinalScore(score);
     setScore(0);
     setAnsweredIndices([]);
     setResultMessage("");
 
+    // ✅ Add redirect after short delay
     setTimeout(() => {
-      navigate("/#games");
-    }, 4000);
+      navigate("/#games"); // or window.location.href = "/#games";
+    }, 3000);
   } catch (err) {
     console.error("❌ Failed to submit game manually:", err);
   }
 };
-
 
   const intervalRef = useRef(null);
   const [totalSeconds, setTotalSeconds] = useState(null); // ⏱️ fetched from backend
@@ -71,41 +75,43 @@ const ParkeQuest = () => {
 
    
   useEffect(() => {
-  // Reset session if this is a new game load (first question and full time)
-      if (
-      currentIndex === 0 &&
-      secondsLeft !== null &&
-      localStorage.getItem("pq_score")
-    ) {
-   localStorage.removeItem("pq_score");
+  if (
+    !hasInitializedRef.current &&
+    currentIndex === 0 &&
+    secondsLeft !== null &&
+    localStorage.getItem("pq_score")
+  ) {
+    localStorage.removeItem("pq_score");
     localStorage.removeItem("pq_answered");
     localStorage.removeItem("pq_index");
     setScore(0);
     setAnsweredIndices([]);
+    hasInitializedRef.current = true; // ✅ Prevent future resets
   }
-}, [secondsLeft]);
+}, [secondsLeft, currentIndex]);
 
       useEffect(() => {
-      if (secondsLeft === null) return;
-      intervalRef.current = setInterval(() => {
-        setSecondsLeft((prev) => {
-          if (prev <= 1) {
-            clearInterval(intervalRef.current);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-      return () => clearInterval(intervalRef.current);
-    }, [secondsLeft]);
+        if (totalSeconds === null) return;
 
+        intervalRef.current = setInterval(() => {
+          setSecondsLeft((prev) => {
+            if (prev <= 1) {
+              clearInterval(intervalRef.current);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+
+        return () => clearInterval(intervalRef.current);
+      }, [totalSeconds]); // ✅ Only runs once when timer is fetched
 
       // 🔁 Auto-redirect 4 seconds after time is up
         useEffect(() => {
       if (secondsLeft === 0) {
         (async () => {
           try {
-            await axios.post("http://localhost:8080/api/parkequest/score", {
+            await axios.post("http://localhost:8080/api/parkequest/submit-score", {
               totalScore: score,
             });
           } catch (err) {
@@ -196,7 +202,7 @@ const ParkeQuest = () => {
     if (secondsLeft === 0) return; // ⛔ Prevent navigation if time is up
     if (currentIndex === questions.length - 1) {
       try {
-        await axios.post("http://localhost:8080/api/parkequest/score", {
+        await axios.post("http://localhost:8080/api/parkequest/submit-score", {
           totalScore: score,
         });
         localStorage.removeItem("pq_score");
@@ -376,12 +382,16 @@ const ParkeQuest = () => {
             </div>
           )}
 
-          {currentIndex === questions.length - 1 && (
-            <div className="text-white mt-6 font-bold text-center text-xl">
-              🎉 SESSION FINISHED!<br />
-              Your final score: <span className="text-green-300">{score} / {questions.length}</span>
+          {finalScore !== null && secondsLeft !== 0 && (
+            <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+              <div className="bg-white text-[#4e2c1c] p-8 rounded-xl shadow-lg text-center max-w-md font-bold text-xl">
+                ✅ Session submitted!<br />
+                Your final score: {finalScore} / {questions.length}
+                <div className="text-sm mt-2 text-gray-600">Returning to homepage...</div>
+              </div>
             </div>
           )}
+
         </div>
       </div>
       {/* Timer popup when time is up */}

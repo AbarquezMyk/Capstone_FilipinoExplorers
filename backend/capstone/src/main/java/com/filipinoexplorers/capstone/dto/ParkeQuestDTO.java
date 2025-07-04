@@ -14,7 +14,6 @@ public class ParkeQuestDTO {
     private String story;
     private String question;
     private String correctAnswer;
-    private int timeLimit; // 🕒 timer input
     private List<String> choices;
     private String hint;
 

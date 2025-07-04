@@ -20,7 +20,6 @@ public class ParkeQuestQuestion {
     private String question;
     private String correctAnswer;
     private String hint;
-    private int timeLimit; // 🕒 REQUIRED for backend to accept timer
 
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JsonManagedReference
