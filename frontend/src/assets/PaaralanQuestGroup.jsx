@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import React, { useState, useEffect } from 'react';
+=======
+import React, { useState } from 'react';
+>>>>>>> 2d221dcefad19fd1a9c3a8190b7dd178a7e22868
 import Background from '../assets/images/Paaralan Quest/Paaralan Quest BG.png';
 import Logo from '../assets/images/Logo.png';
 import StickImage from '../assets/images/Buttons and Other/Timer Log.png';
@@ -330,6 +334,7 @@ const PaaralanQuestGroup = () => {
   const [votes, setVotes] = useState(Array(players.length).fill(null));
   const [scores, setScores] = useState([0, 0, 0]); // Player 1, 2, 3
   const [submitted, setSubmitted] = useState(false);
+<<<<<<< HEAD
   const [timeLeft, setTimeLeft] = useState(10); // 30 seconds for group voting
   const [timerActive, setTimerActive] = useState(true);
   const current = storyData[currentIndex];
@@ -355,6 +360,14 @@ const PaaralanQuestGroup = () => {
 
 
   const handleVote = (playerIndex, choiceIndex) => {
+=======
+  const current = storyData[currentIndex];
+  const location = useLocation();
+  const playerName = location.state?.playerName || "Player";
+  const handleVote = (playerIndex, choiceIndex) => {
+  
+    
+>>>>>>> 2d221dcefad19fd1a9c3a8190b7dd178a7e22868
     if (submitted) return; // Lock voting after submit
     const updatedVotes = [...votes];
     updatedVotes[playerIndex] = choiceIndex;
@@ -388,7 +401,11 @@ const PaaralanQuestGroup = () => {
 
   setScores(newScores);
   setSubmitted(true); // lock in the votes
+<<<<<<< HEAD
   };
+=======
+};
+>>>>>>> 2d221dcefad19fd1a9c3a8190b7dd178a7e22868
 
 
 
@@ -397,8 +414,11 @@ const PaaralanQuestGroup = () => {
       setCurrentIndex(currentIndex + 1);
       setVotes(Array(players.length).fill(null));
       setSubmitted(false);
+<<<<<<< HEAD
       setTimeLeft(30);
       setTimerActive(true);
+=======
+>>>>>>> 2d221dcefad19fd1a9c3a8190b7dd178a7e22868
     }
   };
 
@@ -407,8 +427,11 @@ const PaaralanQuestGroup = () => {
       setCurrentIndex(currentIndex - 1);
       setVotes(Array(players.length).fill(null));
       setSubmitted(false);
+<<<<<<< HEAD
       setTimeLeft(30);
       setTimerActive(true);
+=======
+>>>>>>> 2d221dcefad19fd1a9c3a8190b7dd178a7e22868
     }
   };
 
@@ -436,6 +459,7 @@ const PaaralanQuestGroup = () => {
             position: 'absolute', top: '50%', left: '50%',
             transform: 'translate(-50%, -50%)',
             width: '50px', height: '320px',
+<<<<<<< HEAD
             backgroundColor: '#eee', borderRadius: '50px',
             overflow: 'hidden'
           }}>
@@ -451,6 +475,12 @@ const PaaralanQuestGroup = () => {
         </div>
 
 
+=======
+            backgroundColor: 'lightgreen', borderRadius: '50px'
+          }} />
+        </div>
+
+>>>>>>> 2d221dcefad19fd1a9c3a8190b7dd178a7e22868
         <div style={{
           border: '4px solid #8B4513', backgroundColor: '#f5e5c0',
           borderRadius: 12, padding: 20, height: 600, minWidth: 600,
@@ -533,7 +563,11 @@ const PaaralanQuestGroup = () => {
                   {current.choices.map((choice, j) => (
                     <button
                       key={j}
+<<<<<<< HEAD
                       disabled={submitted || timeLeft <= 0}
+=======
+                      disabled={submitted}
+>>>>>>> 2d221dcefad19fd1a9c3a8190b7dd178a7e22868
                       onClick={() => handleVote(i, j)}
                       style={{
                         padding: '10px',
