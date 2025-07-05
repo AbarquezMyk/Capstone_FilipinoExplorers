@@ -1,34 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState } from 'react';
 import Background from '../assets/images/Paaralan Quest/Paaralan Quest BG.png';
 import Logo from '../assets/images/Logo.png';
 import StickImage from '../assets/images/Buttons and Other/Timer Log.png';
 import LeftArrow from '../assets/images/Buttons and Other/button prev.png';
 import RightArrow from '../assets/images/Buttons and Other/button next.png';
+import { useLocation } from 'react-router-dom';
+const players = ['Player 1', 'Player 2', 'Player 3'];
 
-console.log("✅ PaaralanQuest component is rendering.");
-
-const popoverStyle = {
-  animation: 'fadeIn 0.3s ease',
-  backgroundColor: '#fff8e1',
-  border: '1px solid #ccc',
-  borderRadius: '10px',
-  padding: '10px 15px',
-  position: 'relative',
-  marginTop: '10px',
-  color: '#333',
-  boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-  width: '100%',
-};
-
-const iconStyle = {
-  display: 'inline-block',
-  marginRight: '8px',
-  fontSize: '20px',
-};
-
-// Replace this with all your 45+ entries
-const fullStoryData = [
+const storyData = [
   {
     story: "Si Juan ay isang masipag na estudyante na laging tumutulong sa kanyang mga kaklase.",
     question: "Ano ang ipinapakita ni Juan sa kanyang mga kaklase?",
@@ -346,330 +325,224 @@ const fullStoryData = [
   }
 ];
 
-const PaaralanQuest = () => {
-  const [studentName, setStudentName] = useState("");
-  const [nameInput, setNameInput] = useState("");
-  const [storyData, setStoryData] = useState([]);
-  const [answeredQuestions, setAnsweredQuestions] = useState([]);
+const PaaralanQuestGroup = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedChoice, setSelectedChoice] = useState(null);
-  const [score, setScore] = useState(0);
-  const [feedback, setFeedback] = useState("");
-  const [usedHint, setUsedHint] = useState(false);
-  const [showHint, setShowHint] = useState(false);
-  const [sessionFinished, setSessionFinished] = useState(false);
-  const [nameSubmitted, setNameSubmitted] = useState(false);
-  const [answerResults, setAnswerResults] = useState([]);
-  const [timeLeft, setTimeLeft] = useState(10);
-  const [timerActive, setTimerActive] = useState(true);
+  const [votes, setVotes] = useState(Array(players.length).fill(null));
+  const [scores, setScores] = useState([0, 0, 0]); // Player 1, 2, 3
+  const [submitted, setSubmitted] = useState(false);
+  const current = storyData[currentIndex];
+  const location = useLocation();
+  const playerName = location.state?.playerName || "Player";
+  const handleVote = (playerIndex, choiceIndex) => {
+  
+    
+    if (submitted) return; // Lock voting after submit
+    const updatedVotes = [...votes];
+    updatedVotes[playerIndex] = choiceIndex;
+    setVotes(updatedVotes);
+  };
 
-  const current = storyData.length > 0 ? storyData[currentIndex] : null;
+  const getVoteCounts = () => {
+    const counts = Array(current.choices.length).fill(0);
+    votes.forEach((vote) => {
+      if (vote !== null) counts[vote]++;
+    });
+    return counts;
+  };
 
-  useEffect(() => {
-    const shuffled = [...fullStoryData].sort(() => 0.5 - Math.random());
-    const selected = shuffled.slice(0, 15);
-    setStoryData(selected);
-  }, []);
+  const getMostVotedIndex = () => {
+    const counts = getVoteCounts();
+    const max = Math.max(...counts);
+    return counts.indexOf(max);
+  };
 
-  useEffect(() => {
-    if (storyData.length > 0) {
-      setAnsweredQuestions(Array(storyData.length).fill(false));
-      setAnswerResults(Array(storyData.length).fill(null));
+  const handleSubmit = () => {
+  if (submitted) return; // prevent double submission
+
+  const newScores = [...scores];
+  votes.forEach((vote, i) => {
+    if (vote === storyData[currentIndex].correctAnswer) {
+
+      newScores[i] += 1; // award +1 to player i
     }
-  }, [storyData]);
+  });
 
-  useEffect(() => {
-    if (answeredQuestions.length && answeredQuestions.every(q => q)) {
-      setSessionFinished(true);
-    }
-  }, [answeredQuestions]);
+  setScores(newScores);
+  setSubmitted(true); // lock in the votes
+};
 
-  useEffect(() => {
-    if (sessionFinished) {
-      axios.post("http://localhost:8080/api/paaralan-quest/score/submit", {
-        studentName,
-        totalScore: score
-      })
-      .then(() => console.log("✅ Score and name submitted successfully."))
-      .catch(err => console.error("❌ Failed to submit score:", err));
-    }
-  }, [sessionFinished]);
 
-  useEffect(() => {
-    if (!timerActive || sessionFinished || answeredQuestions[currentIndex]) return;
-
-    const interval = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          setFeedback("You ran out of time");
-          const updatedAnswers = [...answeredQuestions];
-          updatedAnswers[currentIndex] = true;
-          setAnsweredQuestions(updatedAnswers);
-          const updatedResults = [...answerResults];
-          updatedResults[currentIndex] = "wrong";
-          setAnswerResults(updatedResults);
-
-          setTimeout(() => {
-            if (currentIndex < storyData.length - 1) {
-              handleNext();
-            } else {
-              setSessionFinished(true);
-            }
-          }, 1500);
-
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [timerActive, currentIndex, answeredQuestions, sessionFinished, answerResults, storyData.length]);
 
   const handleNext = () => {
     if (currentIndex < storyData.length - 1) {
-      setCurrentIndex(ci => ci + 1);
-      setSelectedChoice(null);
-      setFeedback("");
-      setUsedHint(false);
-      setShowHint(false);
-      setTimeLeft(10);
+      setCurrentIndex(currentIndex + 1);
+      setVotes(Array(players.length).fill(null));
+      setSubmitted(false);
     }
   };
 
   const handlePrev = () => {
     if (currentIndex > 0) {
-      setCurrentIndex(ci => ci - 1);
-      setSelectedChoice(null);
-      setFeedback("");
-      setUsedHint(false);
-      setShowHint(false);
-      setTimeLeft(10);
+      setCurrentIndex(currentIndex - 1);
+      setVotes(Array(players.length).fill(null));
+      setSubmitted(false);
     }
   };
 
-  const handleCheckAnswer = () => {
-    if (selectedChoice === null) {
-      setFeedback("Please select an answer.");
-      return;
-    }
-    if (!answeredQuestions[currentIndex]) {
-      const isCorrect = selectedChoice === current.correctAnswer;
-      setScore(s => s + (isCorrect ? (usedHint ? 1 : 2) : 0));
-      setFeedback(isCorrect ? "CORRECT ANSWER" : "WRONG ANSWER");
-      const updatedAnswers = [...answeredQuestions];
-      updatedAnswers[currentIndex] = true;
-      setAnsweredQuestions(updatedAnswers);
-      const updatedResults = [...answerResults];
-      updatedResults[currentIndex] = isCorrect ? "correct" : "wrong";
-      setAnswerResults(updatedResults);
-    } else {
-      setFeedback("You already answered this question.");
-    }
-  };
-
-  const handleHint = () => {
-    if (!usedHint) {
-      setUsedHint(true);
-      setShowHint(true);
-    }
-  };
-
-  if (!studentName) {
-    return (
-      <div style={{ backgroundImage: `url(${Background})`, backgroundSize: 'cover', minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        <div style={{ backgroundColor: '#fff', padding: '40px', borderRadius: '12px', boxShadow: '0 0 20px rgba(0,0,0,0.2)', textAlign: 'center' }}>
-          <h2>Welcome to Paaralan Quest!</h2>
-          <p>Please enter your name to begin:</p>
-          <input
-            type="text"
-            value={nameInput}
-            onChange={e => setNameInput(e.target.value)}
-            placeholder="Your name"
-            style={{ padding: '10px', width: '80%', marginTop: '10px', borderRadius: '8px', border: '1px solid #ccc' }}
-          />
-          <br />
-          <button
-            onClick={() => {
-              if (nameInput.trim()) {
-                setStudentName(nameInput.trim());
-              } else {
-                alert("Name is required to start the game.");
-              }
-            }}
-            style={{ marginTop: '20px', padding: '10px 20px', borderRadius: '8px', backgroundColor: '#007BFF', color: '#fff', border: 'none', cursor: 'pointer' }}
-          >
-            Start Game
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const voteCounts = getVoteCounts();
+  const mostVoted = getMostVotedIndex();
 
   return (
-    <div style={{ backgroundImage: `url(${Background})`, backgroundSize: 'cover', minHeight: '100vh', paddingTop: '100px', position: 'relative' }}>
-      <img src={Logo} alt="Logo" style={{ position: 'absolute', top: '20px', left: '30px', width: '160px' }} />
+    <div
+      style={{
+        backgroundImage: `url(${Background})`,
+        backgroundSize: 'cover',
+        minHeight: '100vh',
+        paddingTop: '100px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+      }}
+    >
+      <img src={Logo} alt="Logo" style={{ position: 'absolute', top: 20, left: 30, width: 160 }} />
 
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
-        <div style={{ position: 'relative', marginRight: '-25px', marginTop: '100px' }}>
-          <img
-            src={StickImage}
-            alt="Timer"
-            style={{ marginTop: '100px', height: '150px', transform: 'rotate(90deg)', zIndex: 0 }}
-          />
+      <div style={{ display: 'flex', gap: 20, width: '90%', alignItems: 'center' }}>
+        <div style={{ position: 'relative', marginRight: '-25px' }}>
+          <img src={StickImage} alt="Timer" style={{ height: '150px', transform: 'rotate(90deg)' }} />
           <div style={{
-            position: 'absolute',
-            top: 0,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: '50px',
-            height: '320px',
-            overflow: 'hidden',
-            borderRadius: '50px',
-            zIndex: 1
+            position: 'absolute', top: '50%', left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: '50px', height: '320px',
+            backgroundColor: 'lightgreen', borderRadius: '50px'
+          }} />
+        </div>
+
+        <div style={{
+          border: '4px solid #8B4513', backgroundColor: '#f5e5c0',
+          borderRadius: 12, padding: 20, height: 600, minWidth: 600,
+          display: 'flex', flexDirection: 'row'
+        }}>
+          <div style={{ flex: 1, paddingRight: 20 }}>
+            <h2 style={{ color: '#5D4037' }}>Kuwento #{currentIndex + 1}</h2>
+            <div style={{ backgroundColor: '#fff8e1', padding: 15, borderRadius: 8, height: '100%', overflowY: 'auto' }}>
+              {current.story}
+            </div>
+          </div>
+
+          <div style={{ width: 8, backgroundColor: '#8B4513' }} />
+
+          <div style={{ flex: 1, paddingLeft: 20 }}>
+            <h2>{current.question}</h2>
+            <div style={{ marginTop: 10 }}>
+              {current.choices.map((choice, i) => (
+                <div key={i} style={{
+                  border: '2px solid #ccc', borderRadius: 8, marginBottom: 10,
+                  backgroundColor: submitted && i === mostVoted ? '#c8e6c9' : '#fff',
+                  padding: 10
+                }}>
+                  <strong>{choice}</strong>
+                  <div style={{ fontSize: 12, color: '#333' }}>
+                   Welcome, {playerName}!
+                    Votes: {voteCounts[i]}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: 600 }}>
+                            <div style={{
+              backgroundColor: '#f5e5c0',
+              border: '4px solid #8B4513',
+              borderRadius: 10,
+              padding: 20,
+              textAlign: 'left'
+            }}>
+              <h3>📊 Player Scores</h3>
+              {players.map((player, i) => (
+                <div key={i}>
+                  {player}: <strong>{scores[i]}</strong>
+                </div>
+              ))}
+            </div>
+
+
+
+          <div style={{
+            backgroundColor: '#8B4513', borderRadius: 10, padding: 20, color: '#fff',
+            display: 'flex', flexDirection: 'column', gap: 10
           }}>
             <div style={{
-              position: 'absolute',
-              bottom: 0,
-              width: '50px',
-              height: `${(timeLeft / 10) * 320}px`,
-              backgroundColor: 'lightgreen',
-              borderRadius: '50px',
-              transition: 'height 1s linear'
-            }} />
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', border: '4px solid #8B4513', backgroundColor: '#f5e5c0', borderRadius: '12px', padding: '20px', height: '600px', minWidth: '600px' }}>
-          {sessionFinished ? (
-            <div style={{ textAlign: 'center', width: '100%' }}>
-              <h1>🎉 SESSION FINISHED 🎉</h1>
-              <p>Your final score: <strong>{score} points</strong></p>
-            </div>
-          ) : (
-            current && <>
-              <div style={{ flex: 1, paddingRight: '20px' }}>
-                <h2>Kuwento #{currentIndex + 1}</h2>
-                <div style={{ backgroundColor: '#fff8e1', padding: '15px', borderRadius: '8px', height: '100%', overflowY: 'auto' }}>
-                  {current.story}
-                </div>
-              </div>
-
-              <div style={{ width: '8px', backgroundColor: '#8B4513' }} />
-
-              <div style={{ flex: 1, paddingLeft: '20px' }}>
-                <h2>{current.question}</h2>
-                {showHint && (
-                  <div style={popoverStyle}>
-                    <span style={iconStyle}>📘</span>
-                    {current.hint}
-                  </div>
-                )}
-                {current.choices.map((choice, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setSelectedChoice(idx)}
-                    style={{
-                      backgroundColor: selectedChoice === idx ? '#d1e7dd' : '#fff',
-                      marginBottom: '8px',
-                      padding: '10px',
-                      borderRadius: '8px',
-                      border: '2px solid #ccc',
-                      cursor: 'pointer',
-                      width: '100%',
-                      textAlign: 'left'
-                    }}
-                  >
-                    {choice}
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '600px', width: '220px' }}>
-          <div style={{
-            padding: '20px',
-            borderRadius: '10px',
-            border: '4px solid #8B4513',
-            backgroundColor: '#f5e5c0',
-            textAlign: 'center',
-            fontWeight: 'bold',
-            color: feedback === "CORRECT ANSWER" ? 'green' : feedback === "WRONG ANSWER" ? 'red' : '#333'
+            backgroundColor: '#8B4513',
+            borderRadius: 10,
+            padding: 20,
+            color: '#fff',
+            display: 'flex',
+            flexDirection: 'row',
+            gap: 20,
+            justifyContent: 'center'
           }}>
-            Score: {score} <br />
-            {feedback}
-          </div>
+            {players.map((player, i) => (
+              <div key={i} style={{ textAlign: 'center', flex: 1 }}>
+                <div style={{
+                  marginBottom: 10,
+                  fontWeight: 'bold',
+                  fontSize: '16px'
+                }}>{player}'s Vote</div>
 
-          <div style={{ backgroundColor: '#8B4513', padding: '20px', borderRadius: '10px', display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'center' }}>
-            {storyData.map((_, i) => {
-              let bgColor = '#f5e5c0';
-              if (i === currentIndex) bgColor = '#FFD700';
-              else if (answerResults[i] === 'correct') bgColor = 'lightgreen';
-              else if (answerResults[i] === 'wrong') bgColor = '#ff9999';
-              return (
-                <div
-                  key={i}
-                  style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '50%',
-                    backgroundColor: bgColor,
-                    color: '#000',
-                    fontWeight: 'bold',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                  }}
-                >
-                  {i + 1}
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px'
+                }}>
+                  {current.choices.map((choice, j) => (
+                    <button
+                      key={j}
+                      disabled={submitted}
+                      onClick={() => handleVote(i, j)}
+                      style={{
+                        padding: '10px',
+                        backgroundColor: votes[i] === j ? '#ffd54f' : '#fff',
+                        border: '2px solid #ccc',
+                        borderRadius: '8px',
+                        cursor: submitted ? 'not-allowed' : 'pointer',
+                        fontWeight: '500',
+                        color: '#000',
+                        minWidth: '140px',
+                        textAlign: 'center'
+                      }}
+                    >
+                      {choice}
+                    </button>
+                  ))}
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', alignItems: 'center' }}>
-            <button
-              onClick={handleHint}
-              disabled={usedHint}
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <button onClick={handleSubmit} disabled={submitted}
               style={{
-                padding: '10px 20px',
-                borderRadius: '30px',
-                backgroundColor: usedHint ? '#aaa' : '#007BFF',
-                color: '#fff',
-                fontWeight: 'bold',
-                cursor: usedHint ? 'not-allowed' : 'pointer'
-              }}
-            >
-              HINT
-            </button>
-            <button
-              onClick={handleCheckAnswer}
-              style={{
-                padding: '10px 20px',
-                borderRadius: '10px',
-                backgroundColor: '#FFD700',
-                border: '2px solid #D4AC0D',
-                color: '#fff',
-                fontWeight: 'bold'
-              }}
-            >
-              CHECK ANSWER
+                backgroundColor: '#007BFF', color: '#fff', borderRadius: 30,
+                padding: '10px 20px', fontWeight: 'bold'
+              }}>
+              SUBMIT GROUP ANSWER
             </button>
           </div>
         </div>
       </div>
 
-      {!sessionFinished && (
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '40px', marginTop: '40px' }}>
-          <img src={LeftArrow} alt="Previous" onClick={handlePrev} style={{ width: '60px', height: '60px', cursor: currentIndex > 0 ? 'pointer' : 'not-allowed', opacity: currentIndex > 0 ? 1 : 0.5 }} />
-          <img src={RightArrow} alt="Next" onClick={handleNext} style={{ width: '60px', height: '60px', cursor: currentIndex < storyData.length - 1 ? 'pointer' : 'not-allowed', opacity: currentIndex < storyData.length - 1 ? 1 : 0.5 }} />
-        </div>
-      )}
+      <div style={{ marginTop: 40, display: 'flex', alignItems: 'center', gap: 40 }}>
+        <img src={LeftArrow} alt="Prev" onClick={handlePrev}
+          style={{ width: 60, height: 60, cursor: currentIndex > 0 ? 'pointer' : 'not-allowed', opacity: currentIndex > 0 ? 1 : 0.5 }} />
+        <img src={RightArrow} alt="Next" onClick={handleNext}
+          style={{ width: 60, height: 60, cursor: currentIndex < storyData.length - 1 ? 'pointer' : 'not-allowed', opacity: currentIndex < storyData.length - 1 ? 1 : 0.5 }} />
+      </div>
     </div>
   );
 };
 
-export default PaaralanQuest;
+export default PaaralanQuestGroup;

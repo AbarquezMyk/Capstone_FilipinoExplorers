@@ -7,6 +7,7 @@ import GuessTheWord from './assets/Guesstheword';
 import MemoryGame from './assets/MemoryGame';
 import ParkeQuest from './assets/ParkeQuest';
 import PaaralanQuest from './assets/PaaralanQuest';
+import PaaralanQuestGroup from './assets/PaaralanQuestGroup';
 const App = () => {
   return (
     <Router>
@@ -20,6 +21,8 @@ const App = () => {
         <Route path="/memorygame" element={<MemoryGame />} />
         <Route path="/paaralanquest" element={<PaaralanQuest />} />
         <Route path="/parkequest" element={<ParkeQuest />} />
+        <Route path="/paaralanquest-individual" element={<PaaralanQuest />} />
+        <Route path="/paaralanquest-group" element={<PaaralanQuestGroup />} />
       </Routes>
     </Router>
   );
