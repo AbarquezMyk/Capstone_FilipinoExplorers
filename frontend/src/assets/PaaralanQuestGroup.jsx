@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Background from '../assets/images/Paaralan Quest/Paaralan Quest BG.png';
 import Logo from '../assets/images/Logo.png';
 import StickImage from '../assets/images/Buttons and Other/Timer Log.png';
@@ -330,12 +330,31 @@ const PaaralanQuestGroup = () => {
   const [votes, setVotes] = useState(Array(players.length).fill(null));
   const [scores, setScores] = useState([0, 0, 0]); // Player 1, 2, 3
   const [submitted, setSubmitted] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(10); // 30 seconds for group voting
+  const [timerActive, setTimerActive] = useState(true);
   const current = storyData[currentIndex];
   const location = useLocation();
   const playerName = location.state?.playerName || "Player";
+
+  useEffect(() => {
+  if (!timerActive || submitted) return;
+
+  const interval = setInterval(() => {
+    setTimeLeft(prev => {
+      if (prev <= 1) {
+        clearInterval(interval);
+        setSubmitted(true); // Auto-submit when time is up
+        return 0;
+      }
+      return prev - 1;
+    });
+  }, 1000);
+
+  return () => clearInterval(interval);
+}, [timerActive, submitted]);
+
+
   const handleVote = (playerIndex, choiceIndex) => {
-  
-    
     if (submitted) return; // Lock voting after submit
     const updatedVotes = [...votes];
     updatedVotes[playerIndex] = choiceIndex;
@@ -369,7 +388,7 @@ const PaaralanQuestGroup = () => {
 
   setScores(newScores);
   setSubmitted(true); // lock in the votes
-};
+  };
 
 
 
@@ -378,6 +397,8 @@ const PaaralanQuestGroup = () => {
       setCurrentIndex(currentIndex + 1);
       setVotes(Array(players.length).fill(null));
       setSubmitted(false);
+      setTimeLeft(30);
+      setTimerActive(true);
     }
   };
 
@@ -386,6 +407,8 @@ const PaaralanQuestGroup = () => {
       setCurrentIndex(currentIndex - 1);
       setVotes(Array(players.length).fill(null));
       setSubmitted(false);
+      setTimeLeft(30);
+      setTimerActive(true);
     }
   };
 
@@ -413,9 +436,20 @@ const PaaralanQuestGroup = () => {
             position: 'absolute', top: '50%', left: '50%',
             transform: 'translate(-50%, -50%)',
             width: '50px', height: '320px',
-            backgroundColor: 'lightgreen', borderRadius: '50px'
-          }} />
+            backgroundColor: '#eee', borderRadius: '50px',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              width: '100%',
+              height: `${(timeLeft / 30) * 320}px`,
+              backgroundColor: 'lightgreen',
+              transition: 'height 1s linear',
+              position: 'absolute',
+              bottom: 0
+            }} />
+          </div>
         </div>
+
 
         <div style={{
           border: '4px solid #8B4513', backgroundColor: '#f5e5c0',
@@ -499,7 +533,7 @@ const PaaralanQuestGroup = () => {
                   {current.choices.map((choice, j) => (
                     <button
                       key={j}
-                      disabled={submitted}
+                      disabled={submitted || timeLeft <= 0}
                       onClick={() => handleVote(i, j)}
                       style={{
                         padding: '10px',

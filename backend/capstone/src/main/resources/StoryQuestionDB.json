@@ -1,0 +1,17 @@
+[
+  {
+    "story": "Si Juan ay isang masipag na estudyante...",
+    "question": "Ano ang ipinapakita ni Juan sa kanyang mga kaklase?",
+    "choices": ["Katamaran", "Kasipagan", "Kawalang-galang", "Pag-aalinlangan"],
+    "correctAnswer": 1,
+    "hint": "Si Juan ay hindi tamad at palaging tumutulong."
+  },
+  {
+    "story": "Isang araw, nagtanim ng buto ng mangga si Ana...",
+    "question": "Ano ang aral sa kwento ni Ana?",
+    "choices": ["Ang prutas ay masarap", "Ang tubig ay mahalaga", "Ang tiyaga ay may magandang bunga", "Ang araw ay mainit"],
+    "correctAnswer": 2,
+    "hint": "Araw-araw niyang dinilig ang kanyang tanim."
+  }
+  
+]
